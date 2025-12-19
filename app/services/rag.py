@@ -48,9 +48,11 @@ def run_rag(
     # Build context from chunks
     context = "\n---\n".join(d for d, _m in chunks) if chunks else ""
 
-    # Check if this is a comparison/recommendation query
+    # Check if user mentions another artwork by name OR asks comparison question
     # If so, add context from related exhibits
-    if is_comparison_query(question):
+    from app.services.recommendations import find_mentioned_exhibits
+    mentioned = find_mentioned_exhibits(question, exhibit_id)
+    if mentioned or is_comparison_query(question):
         recommendations_context = format_recommendations_context(question, exhibit_id)
         context += recommendations_context
 
