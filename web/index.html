@@ -820,6 +820,11 @@
                     <div class="card-title">QR Tarayıcı</div>
                     <div class="card-subtitle">Eserin QR kodunu tarayın</div>
                 </div>
+                <div id="key-status"
+                    style="margin-left: auto; background: rgba(34, 197, 94, 0.2); color: #22c55e; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-family: monospace; cursor: pointer;"
+                    title="API Key Durumu" onclick="refreshKeyStatus()">
+                    🔑 Key ?/?
+                </div>
             </div>
 
             <div id="scanner-container">
@@ -954,6 +959,7 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             checkApiStatus();
+            refreshKeyStatus();
             initScanner();
         });
 
@@ -1026,6 +1032,38 @@
                 showToast('Kamera durduruldu', 'success');
             } catch (err) {
                 console.error('Stop error:', err);
+            }
+        }
+
+        // Refresh API Key Status
+        async function refreshKeyStatus() {
+            const keyStatus = document.getElementById('key-status');
+            try {
+                const response = await fetch(`${API_BASE}/status/key`);
+                const data = await response.json();
+                updateKeyDisplay(data.current_key, data.total_keys);
+            } catch (error) {
+                keyStatus.textContent = '🔑 Key ?/?';
+                keyStatus.style.background = 'rgba(239, 68, 68, 0.2)';
+                keyStatus.style.color = '#ef4444';
+            }
+        }
+
+        // Update Key Display
+        function updateKeyDisplay(current, total) {
+            const keyStatus = document.getElementById('key-status');
+            keyStatus.textContent = `🔑 Key ${current}/${total}`;
+
+            // Color based on which key we're on
+            if (current === 1) {
+                keyStatus.style.background = 'rgba(34, 197, 94, 0.2)';
+                keyStatus.style.color = '#22c55e';
+            } else if (current === 2) {
+                keyStatus.style.background = 'rgba(234, 179, 8, 0.2)';
+                keyStatus.style.color = '#eab308';
+            } else {
+                keyStatus.style.background = 'rgba(239, 68, 68, 0.2)';
+                keyStatus.style.color = '#ef4444';
             }
         }
 
@@ -1182,6 +1220,9 @@
                 const data = await response.json();
                 addMessage(data.answer, 'bot');
                 lastBotResponse = data.answer;
+
+                // Refresh key status after each request
+                refreshKeyStatus();
 
                 // Auto TTS if enabled
                 if (document.getElementById('tts-enabled').checked) {

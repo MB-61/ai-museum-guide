@@ -72,10 +72,28 @@ class APIKeyRotationManager:
     
     def rotate_to_next_key(self) -> str:
         """Rotate to the next API key, cycling back to the first if necessary."""
+        old_index = self.current_key_index
         self.current_key_index = (self.current_key_index + 1) % len(self.api_keys)
         new_key = self.api_keys[self.current_key_index]
-        logger.info(f"Rotated to API key {self.current_key_index + 1}/{len(self.api_keys)}")
+        logger.info(f"Rotated from key {old_index + 1} to key {self.current_key_index + 1}/{len(self.api_keys)}")
         return new_key
+    
+    def get_key_info(self) -> dict:
+        """Get information about current key state."""
+        return {
+            "current_key": self.current_key_index + 1,
+            "total_keys": len(self.api_keys),
+            "model": self.model_name
+        }
+    
+    def reload_keys(self):
+        """Reload API keys from environment (useful if keys are added at runtime)."""
+        old_count = len(self.api_keys)
+        self._load_api_keys()
+        new_count = len(self.api_keys)
+        if new_count != old_count:
+            logger.info(f"Reloaded keys: {old_count} -> {new_count}")
+        self.max_retries = len(self.api_keys)
     
     def _create_llm(self, api_key: str) -> ChatGoogleGenerativeAI:
         """Create a new LLM instance with the given API key."""
