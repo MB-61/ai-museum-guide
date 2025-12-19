@@ -36,12 +36,23 @@ def create_app() -> FastAPI:
 
     # Serve frontend static files
     web_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "web")
+    data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+    
     if os.path.exists(web_dir):
         app.mount("/static", StaticFiles(directory=web_dir), name="static")
+        
+        # Serve QR code images
+        qr_dir = os.path.join(data_dir, "qr")
+        if os.path.exists(qr_dir):
+            app.mount("/static/qr", StaticFiles(directory=qr_dir), name="qr_codes")
         
         @app.get("/")
         async def serve_frontend():
             return FileResponse(os.path.join(web_dir, "index.html"))
+        
+        @app.get("/gallery")
+        async def serve_gallery():
+            return FileResponse(os.path.join(web_dir, "gallery.html"))
 
     return app
 

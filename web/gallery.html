@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Museum Guide - Eser Galerisi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --bg-dark: #0f0f23;
+            --bg-card: #1a1a2e;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            min-height: 100vh;
+            color: var(--text-primary);
+            padding: 2rem;
+        }
+
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+        }
+
+        .qr-code {
+            width: 180px;
+            height: 180px;
+            background: white;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .qr-code img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .exhibit-info {
+            text-align: center;
+            width: 100%;
+        }
+
+        .exhibit-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .exhibit-artist {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .qr-id {
+            display: inline-block;
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-family: monospace;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+            transition: opacity 0.2s;
+        }
+
+        .back-link:hover {
+            opacity: 0.8;
+        }
+
+        .print-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .print-btn:hover {
+            transform: scale(1.05);
+        }
+
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+
+            .bg-animation,
+            .back-link,
+            .print-btn {
+                display: none;
+            }
+
+            .card {
+                break-inside: avoid;
+                border: 1px solid #ddd;
+            }
+
+            .exhibit-name,
+            .exhibit-artist {
+                color: black;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-animation"></div>
+
+    <a href="/" class="back-link">← Ana Sayfaya Dön</a>
+
+    <header>
+        <h1>🏛️ Eser Galerisi</h1>
+        <p class="subtitle">Tüm eserler ve QR kodları</p>
+    </header>
+
+    <div class="gallery" id="gallery">
+        <!-- Cards will be inserted here by JavaScript -->
+    </div>
+
+    <button class="print-btn" onclick="window.print()">
+        🖨️ Yazdır
+    </button>
+
+    <script>
+        const exhibits = [
+            { qr: "qr_01", name: "Mona Lisa", artist: "Leonardo da Vinci" },
+            { qr: "qr_02", name: "Yıldızlı Gece", artist: "Vincent van Gogh" },
+            { qr: "qr_03", name: "İnci Küpeli Kız", artist: "Johannes Vermeer" },
+            { qr: "qr_04", name: "Son Akşam Yemeği", artist: "Leonardo da Vinci" },
+            { qr: "qr_05", name: "Çığlık", artist: "Edvard Munch" },
+            { qr: "qr_06", name: "Guernica", artist: "Pablo Picasso" },
+            { qr: "qr_07", name: "Venüs'ün Doğuşu", artist: "Sandro Botticelli" },
+            { qr: "qr_08", name: "Adem'in Yaratılışı", artist: "Michelangelo" },
+            { qr: "qr_09", name: "Büyük Dalga", artist: "Katsushika Hokusai" },
+            { qr: "qr_10", name: "Gece Devriyesi", artist: "Rembrandt" },
+            { qr: "qr_11", name: "Belleğin Azmi", artist: "Salvador Dalí" },
+            { qr: "qr_12", name: "Öpücük", artist: "Gustav Klimt" },
+            { qr: "qr_13", name: "Su Zambakları", artist: "Claude Monet" },
+            { qr: "qr_14", name: "Avignon'lu Kızlar", artist: "Pablo Picasso" },
+            { qr: "qr_15", name: "Amerikan Gotiği", artist: "Grant Wood" }
+        ];
+
+        const gallery = document.getElementById('gallery');
+
+        exhibits.forEach(exhibit => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="qr-code">
+                    <img src="/static/qr/${exhibit.qr}.png" alt="${exhibit.name} QR" 
+                         onerror="this.parentElement.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;color:#999;\\'>QR Yüklenemedi</div>'">
+                </div>
+                <div class="exhibit-info">
+                    <div class="exhibit-name">${exhibit.name}</div>
+                    <div class="exhibit-artist">${exhibit.artist}</div>
+                    <span class="qr-id">${exhibit.qr}</span>
+                </div>
+            `;
+            gallery.appendChild(card);
+        });
+    </script>
+</body>
+
+</html>
