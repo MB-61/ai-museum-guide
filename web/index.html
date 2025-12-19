@@ -925,6 +925,14 @@
         let lastBotResponse = '';
         let synthesis = window.speechSynthesis;
 
+        // User session ID for memory system
+        let userId = localStorage.getItem('museum_user_id');
+        if (!userId) {
+            userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('museum_user_id', userId);
+        }
+        console.log('User ID:', userId);
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             checkApiStatus();
@@ -1142,7 +1150,8 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         qr_id: currentQrId,
-                        question: question
+                        question: question,
+                        user_id: userId
                     })
                 });
 

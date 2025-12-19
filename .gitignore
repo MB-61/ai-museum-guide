@@ -19,6 +19,7 @@ ENV/
 # ChromaDB local data
 chroma_data/
 storage/
+storage/memory/
 *.db
 
 # IDE
