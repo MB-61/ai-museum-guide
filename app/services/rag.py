@@ -63,11 +63,20 @@ def run_rag(
         # Add user's current question to history
         add_message(user_id, "user", question)
 
+    # Get exhibit name for system prompt
+    from app.services.recommendations import EXHIBIT_NAMES
+    current_exhibit_name = EXHIBIT_NAMES.get(exhibit_id, exhibit_id) if exhibit_id else "bilinmeyen eser"
+
     # Build prompt with memory and history
-    system = """You are a museum guide. Use the provided context to answer.
-When asked about similar artworks or comparisons, use the 'Related artworks' section.
-Respond in the same language as the question.
-Be helpful and make specific recommendations when asked."""
+    system = f"""You are a museum guide. Use ONLY the provided context to answer.
+The visitor is currently viewing: "{current_exhibit_name}"
+
+IMPORTANT RULES:
+1. If the visitor asks about a DIFFERENT artwork that is NOT in your context, politely redirect them:
+   "Şu anda {current_exhibit_name} eserini inceliyorsunuz. Lütfen bu eserle ilgili sorular sorun. Diğer eserler için o eserin QR kodunu tarayabilirsiniz."
+2. When asked about similar artworks or comparisons, use the 'Related artworks' section if available.
+3. Respond in the same language as the question.
+4. Be helpful and friendly."""
     prompt = build_prompt(context, question, memory_context, history_context)
 
     # Get LLM response
