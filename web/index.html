@@ -840,6 +840,24 @@
                 <button class="control-btn danger" id="stop-btn" onclick="stopScanner()">
                     <span>⏹️</span> Durdur
                 </button>
+                <select id="exhibit-select" class="control-btn"
+                    style="background: var(--accent); border-color: var(--accent); cursor: pointer;">
+                    <option value="qr_01">🖼️ Mona Lisa</option>
+                    <option value="qr_02">🌙 Yıldızlı Gece</option>
+                    <option value="qr_03">💎 İnci Küpeli Kız</option>
+                    <option value="qr_04">🍷 Son Akşam Yemeği</option>
+                    <option value="qr_05">😱 Çığlık</option>
+                    <option value="qr_06">💣 Guernica</option>
+                    <option value="qr_07">🐚 Venüs'ün Doğuşu</option>
+                    <option value="qr_08">☝️ Adem'in Yaratılışı</option>
+                    <option value="qr_09">🌊 Büyük Dalga</option>
+                    <option value="qr_10">🔦 Gece Devriyesi</option>
+                    <option value="qr_11">⏰ Belleğin Azmi</option>
+                    <option value="qr_12">💋 Öpücük</option>
+                    <option value="qr_13">🪷 Su Zambakları</option>
+                    <option value="qr_14">👯 Avignon'lu Kızlar</option>
+                    <option value="qr_15">🏠 Amerikan Gotiği</option>
+                </select>
                 <button class="control-btn" id="test-btn" onclick="simulateQrScan()"
                     style="background: var(--accent); border-color: var(--accent);">
                     <span>🧪</span> Test
@@ -1013,8 +1031,10 @@
 
         // Simulate QR Scan for Testing
         function simulateQrScan() {
-            const testQrId = 'qr_01'; // This maps to mona_lisa in qr_to_exhibit.json
-            showToast(`🧪 Test: QR Kod Simüle Edildi: ${testQrId}`, 'success');
+            const select = document.getElementById('exhibit-select');
+            const testQrId = select.value;
+            const exhibitName = select.options[select.selectedIndex].text;
+            showToast(`🧪 Test: ${exhibitName}`, 'success');
             onScanSuccess(testQrId, null);
         }
 
