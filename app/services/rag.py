@@ -10,6 +10,11 @@ from app.services.memory_service import (
     update_memory,
     add_visited_exhibit,
 )
+from app.services.conversation_history import (
+    get_conversation_history,
+    add_message,
+    format_history_for_prompt,
+)
 
 
 def run_rag(
@@ -18,11 +23,11 @@ def run_rag(
     user_id: Optional[str] = None
 ) -> Tuple[str, List[str]]:
     """
-    Merkez RAG entry point with memory support.
+    Merkez RAG entry point with memory and conversation history support.
 
     - qr_id varsa -> resolve_qr ile exhibit_id'ye çevir
     - qr_id yoksa -> global arama
-    - user_id varsa -> hafıza sistemi aktif
+    - user_id varsa -> hafıza sistemi + sohbet geçmişi aktif
     """
 
     exhibit_id: Optional[str] = None
@@ -38,21 +43,27 @@ def run_rag(
     # Build context from chunks
     context = "\n---\n".join(d for d, _m in chunks) if chunks else ""
 
-    # Get memory context if user_id provided
+    # Get memory context and conversation history if user_id provided
     memory_context = ""
+    history_context = ""
     if user_id:
         memory_context = get_memory_context(user_id)
+        history_context = format_history_for_prompt(user_id, max_messages=6)
+        # Add user's current question to history
+        add_message(user_id, "user", question)
 
-    # Build prompt with memory
+    # Build prompt with memory and history
     system = "You are a museum guide. Use only the provided context. Respond in the same language as the question."
-    prompt = build_prompt(context, question, memory_context)
+    prompt = build_prompt(context, question, memory_context, history_context)
 
     # Get LLM response
     answer = call_llm(system_prompt=system, user_prompt=prompt)
     sources = [m.get("source") for _d, m in chunks if m and m.get("source")]
 
-    # Extract and save important data if user_id provided
+    # Save assistant response to history
     if user_id:
+        add_message(user_id, "assistant", answer)
+        # Extract and save important data
         extraction = extract_important_data(question, answer)
         if extraction.is_important:
             update_memory(user_id, extraction)
