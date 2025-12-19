@@ -15,6 +15,10 @@ from app.services.conversation_history import (
     add_message,
     format_history_for_prompt,
 )
+from app.services.recommendations import (
+    is_comparison_query,
+    format_recommendations_context,
+)
 
 
 def run_rag(
@@ -23,11 +27,12 @@ def run_rag(
     user_id: Optional[str] = None
 ) -> Tuple[str, List[str]]:
     """
-    Merkez RAG entry point with memory and conversation history support.
+    Merkez RAG entry point with memory, conversation history, and recommendations.
 
     - qr_id varsa -> resolve_qr ile exhibit_id'ye çevir
     - qr_id yoksa -> global arama
     - user_id varsa -> hafıza sistemi + sohbet geçmişi aktif
+    - karşılaştırma sorusu -> diğer eserleri de dahil et
     """
 
     exhibit_id: Optional[str] = None
@@ -37,11 +42,17 @@ def run_rag(
         if user_id and exhibit_id:
             add_visited_exhibit(user_id, exhibit_id)
 
-    # Retrieve relevant chunks
+    # Retrieve relevant chunks for current exhibit
     chunks = retrieve(question, exhibit_id=exhibit_id, k=4)
 
     # Build context from chunks
     context = "\n---\n".join(d for d, _m in chunks) if chunks else ""
+
+    # Check if this is a comparison/recommendation query
+    # If so, add context from related exhibits
+    if is_comparison_query(question):
+        recommendations_context = format_recommendations_context(question, exhibit_id)
+        context += recommendations_context
 
     # Get memory context and conversation history if user_id provided
     memory_context = ""
@@ -53,7 +64,10 @@ def run_rag(
         add_message(user_id, "user", question)
 
     # Build prompt with memory and history
-    system = "You are a museum guide. Use only the provided context. Respond in the same language as the question."
+    system = """You are a museum guide. Use the provided context to answer.
+When asked about similar artworks or comparisons, use the 'Related artworks' section.
+Respond in the same language as the question.
+Be helpful and make specific recommendations when asked."""
     prompt = build_prompt(context, question, memory_context, history_context)
 
     # Get LLM response
