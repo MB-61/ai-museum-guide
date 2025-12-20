@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure TTS Test - Sadece Ses</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        select,
+        input,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #status {
+            text-align: center;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .ready {
+            color: #4ade80;
+        }
+
+        .loading {
+            color: #667eea;
+        }
+
+        .error {
+            color: #f87171;
+        }
+
+        #console-log {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+
+    <!-- Config (API Keys) -->
+    <script src="config.js"></script>
+
+    <!-- Microsoft Speech SDK -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk@latest/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle-min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Azure TTS Test</h1>
+
+        <div class="form-group">
+            <label>Ses Secin:</label>
+            <select id="voice">
+                <optgroup label="Turkce">
+                    <option value="tr-TR-AhmetNeural" selected>Ahmet (Erkek)</option>
+                    <option value="tr-TR-EmelNeural">Emel (Kadin)</option>
+                </optgroup>
+                <optgroup label="English">
+                    <option value="en-US-GuyNeural">Guy (Male)</option>
+                    <option value="en-US-JennyNeural">Jenny (Female)</option>
+                </optgroup>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Metin:</label>
+            <textarea id="text">Merhaba! Ben sizin yapay zeka rehberinizim. Size nasil yardimci olabilirim?</textarea>
+        </div>
+
+        <button id="speak" onclick="speak()">Konus</button>
+
+        <div id="status" class="ready">Hazir - Konus butonuna tiklayin</div>
+
+        <div id="console-log"></div>
+    </div>
+
+    <script>
+        // Azure credentials (from config.js)
+        const AZURE_KEY = CONFIG.AZURE_SPEECH_KEY;
+        const AZURE_REGION = CONFIG.AZURE_SPEECH_REGION;
+
+        function log(msg) {
+            const logDiv = document.getElementById('console-log');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${time}] ${msg}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
+        }
+
+        function setStatus(msg, type) {
+            const status = document.getElementById('status');
+            status.textContent = msg;
+            status.className = type;
+        }
+
+        async function speak() {
+            const text = document.getElementById('text').value.trim();
+            const voiceName = document.getElementById('voice').value;
+
+            if (!text) {
+                alert('Lutfen metin girin!');
+                return;
+            }
+
+            document.getElementById('speak').disabled = true;
+            setStatus('Baglaniyor...', 'loading');
+            log('Azure TTS baslatiliyor...');
+            log('Ses: ' + voiceName);
+            log('Region: ' + AZURE_REGION);
+
+            try {
+                // Speech config
+                const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(AZURE_KEY, AZURE_REGION);
+                speechConfig.speechSynthesisVoiceName = voiceName;
+
+                log('SpeechConfig olusturuldu');
+
+                // Audio config - speaker output
+                const audioConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
+                log('AudioConfig olusturuldu');
+
+                // Synthesizer
+                const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, audioConfig);
+                log('Synthesizer olusturuldu');
+
+                setStatus('Konusuluyor...', 'loading');
+                log('Sentezleme basliyor: "' + text.substring(0, 50) + '..."');
+
+                synthesizer.speakTextAsync(
+                    text,
+                    result => {
+                        if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+                            log('BASARILI! Ses tamamlandi.');
+                            log('Audio suresi: ' + (result.audioDuration / 10000) + ' ms');
+                            setStatus('Basarili! Ses calindi.', 'ready');
+                        } else {
+                            log('HATA: ' + result.errorDetails);
+                            setStatus('Hata: ' + result.errorDetails, 'error');
+                        }
+                        synthesizer.close();
+                        document.getElementById('speak').disabled = false;
+                    },
+                    error => {
+                        log('HATA: ' + error);
+                        setStatus('Hata: ' + error, 'error');
+                        synthesizer.close();
+                        document.getElementById('speak').disabled = false;
+                    }
+                );
+
+            } catch (error) {
+                log('EXCEPTION: ' + error.message);
+                setStatus('Hata: ' + error.message, 'error');
+                document.getElementById('speak').disabled = false;
+            }
+        }
+
+        // Sayfa yuklendi
+        log('Sayfa yuklendi. Azure TTS test icin hazir.');
+        log('API Key: ' + AZURE_KEY.substring(0, 10) + '...');
+        log('Region: ' + AZURE_REGION);
+    </script>
+</body>
+
+</html>
