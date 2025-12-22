@@ -147,10 +147,7 @@ LLM_MODEL=gemini-2.5-flash
 2. Telefonunuzun tarayıcısından ngrok URL'sine gidin
 3. QR kodları tarayın ve sesli sohbet edin
 
-## 📄 Lisans
 
-MIT License
 
 ## 👤 Geliştirici
 
-Created with ❤️ and AI assistance
