@@ -511,6 +511,44 @@
             text-align: center;
         }
 
+        /* Sample Questions */
+        .sample-questions {
+            padding: 12px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            margin: 8px 0;
+        }
+
+        .sample-title {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .sample-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .sample-chip {
+            padding: 8px 14px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 20px;
+            color: var(--primary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .sample-chip:hover {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.02);
+        }
+
         /* Chat Input */
         .chat-input-area {
             display: flex;
@@ -753,10 +791,49 @@
                 </div>
             </div>
 
-            <div style="display: flex; gap: 12px; margin-top: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px; width: 100%;">
+                <!-- QR Test Selector -->
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <select id="qr-test-select"
+                        style="flex: 1; padding: 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); font-size: 0.9rem;">
+                        <option value="">-- Test için eser seçin --</option>
+                        <option value="qr_01">1. Türk Maarif Cemiyeti Tüzüğü (1928)</option>
+                        <option value="qr_02">2. Atatürk Anıtı</option>
+                        <option value="qr_03">3. Laboratuvar Aküsü</option>
+                        <option value="qr_04">4. Temsili Sınıf ve Sıralar</option>
+                        <option value="qr_05">5. Daktilo ve Hesap Makineleri</option>
+                        <option value="qr_06">6. Mezuniyet Cübbeleri</option>
+                        <option value="qr_07">7. Tarihi Diplomalar</option>
+                        <option value="qr_08">8. Türk Marşı Notaları (1945)</option>
+                        <option value="qr_09">9. Ahmet Ünlü Notaları (1965)</option>
+                        <option value="qr_10">10. Si Bemol Klarnet</option>
+                        <option value="qr_11">11. Si Bemol Trompet</option>
+                        <option value="qr_12">12. Okuma-Yazma Kursu (1928)</option>
+                        <option value="qr_13">13. Bando Kıyafeti</option>
+                        <option value="qr_15">15. TED Marşı</option>
+                        <option value="qr_16">16. Basketbol Kupası (1972-73)</option>
+                        <option value="qr_17">17. Voleybol Kupası (1957-58)</option>
+                        <option value="qr_18">18. Basketbol Dünya İkinciliği (1983-84)</option>
+                        <option value="qr_19">19. Voleybol Şampiyonası (1969)</option>
+                        <option value="qr_20">20. Basketbol Birinciliği (1984-85)</option>
+                        <option value="qr_21">21. Nevin Ürfüoğlu Fotoğrafları</option>
+                        <option value="qr_22">22. Kolejliler Forması</option>
+                        <option value="qr_23">23. Sirkeci Garı Fotoğrafı</option>
+                        <option value="qr_24">24. Dilek Bağı Dergisi (1930)</option>
+                        <option value="qr_25">25. TED Üniversitesi Kanunu</option>
+                        <option value="qr_26">26. Liberal Eğitim Manifestosu</option>
+                        <option value="qr_27">27. Okul Flaması (1933)</option>
+                        <option value="qr_28">28. Atatürk ve Semra Baydar</option>
+                        <option value="qr_29">29. İlk Kolej Binası (1937)</option>
+                        <option value="qr_30">30. Ziya Gökalp Maketi</option>
+                        <option value="qr_31">31. Okul Zili</option>
+                        <option value="qr_32">32. 90. Yıl Rölyefi</option>
+                    </select>
+                    <button class="qr-back-btn"
+                        style="background: var(--success); border-color: var(--success); white-space: nowrap;"
+                        onclick="testSelectedQR()">🧪 Test Et</button>
+                </div>
                 <button class="qr-back-btn" onclick="goToStart()">← Geri Dön</button>
-                <button class="qr-back-btn" style="background: var(--accent); border-color: var(--accent);"
-                    onclick="testQRScan()">🧪 Test (Mona Lisa)</button>
             </div>
         </div>
     </div>
@@ -783,9 +860,32 @@
             <div id="subtitle"></div>
         </div>
 
+        <!-- Sample Questions (only in general mode) -->
+        <div id="sample-questions" class="sample-questions" style="display: none;">
+            <div class="sample-title">Örnek Sorular:</div>
+            <div class="sample-chips">
+                <button class="sample-chip" onclick="askSample('Müzede hangi eserler var?')">Müzede hangi eserler
+                    var?</button>
+                <button class="sample-chip" onclick="askSample('TED Kolej ne zaman kuruldu?')">TED Kolej ne zaman
+                    kuruldu?</button>
+                <button class="sample-chip"
+                    onclick="askSample('Atatürk ve Semra Baydar fotoğrafı hakkında bilgi ver')">Atatürk
+                    fotoğrafı</button>
+                <button class="sample-chip" onclick="askSample('Türk Maarif Cemiyeti nedir?')">Türk Maarif
+                    Cemiyeti</button>
+                <button class="sample-chip" onclick="askSample('Okul bandosu hakkında bilgi ver')">Okul Bandosu</button>
+                <button class="sample-chip" onclick="askSample('Spor kupaları hakkında bilgi ver')">Spor
+                    Kupaları</button>
+            </div>
+        </div>
+
         <div class="messages-container" id="messages"></div>
 
         <div class="chat-input-area">
+            <button class="input-btn" id="continuous-btn" onclick="toggleContinuousMode()" title="Sürekli Konuşma Modu"
+                style="opacity: 0.5;">🔄</button>
+            <button class="input-btn" id="stop-btn" onclick="stopSpeech()" title="Konuşmayı Durdur"
+                style="display: none; background: var(--error);">⏹️</button>
             <button class="input-btn" id="mic-btn" onclick="toggleMic()" title="Sesle sor">🎤</button>
             <input type="text" id="chat-input" placeholder="Sorunuzu yazın..." onkeypress="handleKeyPress(event)">
             <button class="input-btn send-btn" id="send-btn" onclick="sendMessage()" title="Gönder">➤</button>
@@ -819,6 +919,16 @@
         let recognition = null;
         let isListening = false;
 
+        // Session-based conversation history (max 5 messages)
+        let conversationHistory = [];
+
+        // Continuous conversation mode (auto-restart mic after avatar finishes)
+        let continuousMode = false;
+
+        // Audio control
+        let currentAudioSource = null;
+        let isSpeaking = false;
+
         const API_BASE = window.location.origin + '/api/v1';
         let AZURE_KEY = '';
         let AZURE_REGION = 'westeurope';
@@ -847,10 +957,12 @@
             currentQrId = null;
             currentExhibitId = null;
             currentExhibitTitle = null;
+            conversationHistory = [];  // Reset memory on navigation
         };
 
         window.startWithQR = function () {
             qrMode = true;
+            conversationHistory = [];  // Reset memory for new QR session
             showScreen('qr');
             startQRScanner();
         };
@@ -862,6 +974,7 @@
 
         window.startWithoutQR = function () {
             qrMode = false;
+            conversationHistory = [];  // Reset memory for general mode
             showScreen('chat');
             initChatScreen();
         };
@@ -927,20 +1040,35 @@
             }
         }
 
+        // Test selected QR from dropdown
+        window.testSelectedQR = function () {
+            const select = document.getElementById('qr-test-select');
+            const qrId = select.value;
+            if (!qrId) {
+                showToast('Lütfen bir eser seçin', 'error');
+                return;
+            }
+            stopQRScanner();
+            onQRSuccess(qrId);
+        };
+
         // ========== CHAT SCREEN ==========
         function initChatScreen() {
             const modeText = document.getElementById('mode-text');
             const exhibitBadge = document.getElementById('exhibit-badge');
             const exhibitName = document.getElementById('exhibit-name');
+            const sampleQuestions = document.getElementById('sample-questions');
 
             if (qrMode && currentExhibitTitle) {
                 modeText.textContent = 'Eser odaklı mod';
                 exhibitBadge.classList.add('active');
                 exhibitName.textContent = currentExhibitTitle;
+                sampleQuestions.style.display = 'none';
             } else {
-                modeText.textContent = 'Genel mod';
+                modeText.textContent = 'Genel mod - Tüm eserler';
                 exhibitBadge.classList.remove('active');
-                addSystemMessage('👋 Merhaba! Müze hakkında sorularınızı sorabilirsiniz.');
+                sampleQuestions.style.display = 'block';
+                addSystemMessage('👋 Merhaba! TED Kolej Müzesi hakkında sorularınızı sorabilirsiniz. Aşağıdaki önerilerden birini seçin veya kendi sorunuzu yazın.');
             }
 
             if (!isAvatarReady) {
@@ -949,6 +1077,14 @@
 
             initSpeechRecognition();
         }
+
+        // Sample question click handler
+        window.askSample = function (question) {
+            document.getElementById('chat-input').value = question;
+            sendMessage();
+            // Hide sample questions after first use
+            document.getElementById('sample-questions').style.display = 'none';
+        };
 
         // ========== AVATAR ==========
         async function initAvatar() {
@@ -963,7 +1099,7 @@
                 });
 
                 await head.showAvatar({
-                    url: './avatar.glb',
+                    url: '/static/avatar.glb',
                     body: 'M',
                     avatarMood: 'neutral',
                     lipsyncLang: 'en'
@@ -1053,10 +1189,30 @@
                 const source = audioContext.createBufferSource();
                 source.buffer = audioBuffer;
                 source.connect(audioContext.destination);
-                source.onended = resolve;
+                source.onended = () => {
+                    currentAudioSource = null;
+                    resolve();
+                };
+                currentAudioSource = source;  // Track for stop functionality
                 source.start();
             });
         }
+
+        // Stop avatar speech immediately
+        window.stopSpeech = function () {
+            if (currentAudioSource) {
+                try {
+                    currentAudioSource.stop();
+                } catch (e) { }
+                currentAudioSource = null;
+            }
+            isSpeaking = false;
+            resetVisemes();
+            hideSubtitle();
+            setStatus('Durduruldu', 'ready');
+            document.getElementById('stop-btn').style.display = 'none';
+            showToast('Konuşma durduruldu', 'info');
+        };
 
         function setVisemeSmooth(targetViseme, targetIntensity, lerpSpeed = 0.35) {
             visemeNames.forEach(v => {
@@ -1131,7 +1287,11 @@
             }
 
             setStatus('Konuşuluyor...', 'speaking');
-            showSubtitle(text);
+            // showSubtitle(text); // Disabled - avatarın üzerinde metin gösterme
+
+            // Show stop button and set speaking flag
+            isSpeaking = true;
+            document.getElementById('stop-btn').style.display = 'inline-block';
 
             await initAudioContext();
 
@@ -1166,10 +1326,14 @@
                             ]);
 
                             hideSubtitle();
+                            isSpeaking = false;
+                            document.getElementById('stop-btn').style.display = 'none';
                             setStatus('Hazır', 'ready');
                             resolve();
                         } else {
                             hideSubtitle();
+                            isSpeaking = false;
+                            document.getElementById('stop-btn').style.display = 'none';
                             setStatus('TTS hatası', 'error');
                             reject(result.errorDetails);
                         }
@@ -1196,7 +1360,10 @@
             disableInput(true);
 
             try {
-                const payload = { question };
+                const payload = {
+                    question,
+                    history: conversationHistory  // Include conversation history
+                };
                 if (qrMode && currentQrId) {
                     payload.qr_id = currentQrId;
                 }
@@ -1212,8 +1379,26 @@
                 const data = await response.json();
                 addMessage(data.answer, 'bot');
 
+                // Save to conversation history (keep last 5 pairs = 10 messages)
+                conversationHistory.push({ role: 'user', content: question });
+                conversationHistory.push({ role: 'assistant', content: data.answer });
+                if (conversationHistory.length > 10) {
+                    conversationHistory = conversationHistory.slice(-10);
+                }
+
                 // Speak the answer
                 await speakWithAvatar(data.answer);
+
+                // Auto-restart mic if continuous mode is enabled
+                if (continuousMode && recognition) {
+                    setTimeout(() => {
+                        if (!isListening) {
+                            recognition.start();
+                            isListening = true;
+                            document.getElementById('mic-btn').classList.add('recording');
+                        }
+                    }, 500);
+                }
 
             } catch (err) {
                 console.error('Chat error:', err);
@@ -1249,44 +1434,93 @@
         }
 
         // ========== SPEECH RECOGNITION ==========
+        let silenceTimer = null;
+        const SILENCE_TIMEOUT = 7000; // 7 seconds of silence
+
         function initSpeechRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
                 document.getElementById('mic-btn').style.display = 'none';
+                document.getElementById('continuous-btn').style.display = 'none';
                 return;
             }
 
             recognition = new SpeechRecognition();
-            recognition.continuous = false;
+            recognition.continuous = true;  // Keep listening
             recognition.interimResults = true;
             recognition.lang = 'tr-TR';
 
             recognition.onresult = (event) => {
+                // Clear silence timer on new speech
+                if (silenceTimer) {
+                    clearTimeout(silenceTimer);
+                    silenceTimer = null;
+                }
+
                 let transcript = '';
                 for (let i = 0; i < event.results.length; i++) {
                     transcript += event.results[i][0].transcript;
                 }
                 document.getElementById('chat-input').value = transcript;
+
+                // Start silence timer after speech
+                silenceTimer = setTimeout(() => {
+                    // Stop recognition after 7 sec silence
+                    if (isListening) {
+                        recognition.stop();
+                    }
+                }, SILENCE_TIMEOUT);
             };
 
             recognition.onend = () => {
+                // Clear any pending timer
+                if (silenceTimer) {
+                    clearTimeout(silenceTimer);
+                    silenceTimer = null;
+                }
+
                 isListening = false;
                 document.getElementById('mic-btn').classList.remove('recording');
 
                 const input = document.getElementById('chat-input');
                 if (input.value.trim()) {
-                    sendMessage();
+                    // Only auto-send if continuous mode is ON
+                    if (continuousMode) {
+                        sendMessage();
+                    } else {
+                        // In normal mode, just show toast - user presses Enter to send
+                        showToast('Metni göndermek için Enter\'a basın', 'info');
+                    }
                 }
             };
 
             recognition.onerror = (event) => {
+                if (silenceTimer) {
+                    clearTimeout(silenceTimer);
+                    silenceTimer = null;
+                }
                 isListening = false;
                 document.getElementById('mic-btn').classList.remove('recording');
-                if (event.error !== 'aborted') {
+                if (event.error !== 'aborted' && event.error !== 'no-speech') {
                     showToast('Ses tanıma hatası', 'error');
                 }
             };
         }
+
+        // Toggle continuous conversation mode
+        window.toggleContinuousMode = function () {
+            continuousMode = !continuousMode;
+            const btn = document.getElementById('continuous-btn');
+            if (continuousMode) {
+                btn.style.opacity = '1';
+                btn.style.background = 'var(--success)';
+                showToast('Sürekli Konuşma: AÇIK', 'success');
+            } else {
+                btn.style.opacity = '0.5';
+                btn.style.background = '';
+                showToast('Sürekli Konuşma: KAPALI', 'info');
+            }
+        };
 
         window.toggleMic = function () {
             if (!recognition) return;
