@@ -11,6 +11,9 @@
     <!-- QR Scanner Library -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
+    <!-- QR Code Generator Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
     <!-- Azure Speech SDK -->
     <script
         src="https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk@latest/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle-min.js"></script>
@@ -769,6 +772,20 @@
                     </div>
                 </button>
             </div>
+
+            <!-- Network Sharing Section -->
+            <div id="network-info"
+                style="margin-top: 20px; padding: 15px; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); text-align: center;">
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 10px;">📱 Mobil cihazdan
+                    bağlanmak için:</div>
+                <div id="network-url"
+                    style="font-family: monospace; font-size: 0.9rem; color: var(--primary); word-break: break-all; margin-bottom: 15px;">
+                    Yükleniyor...</div>
+                <div id="network-qr"
+                    style="display: inline-block; background: white; padding: 10px; border-radius: 8px;"></div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 10px;">Bu QR kodu telefonla
+                    tarayın</div>
+            </div>
         </div>
     </div>
 
@@ -948,6 +965,36 @@
             }
         }
         loadAzureConfig();
+
+        // Generate network QR for mobile access
+        function generateNetworkQR() {
+            const urlElement = document.getElementById('network-url');
+            const qrContainer = document.getElementById('network-qr');
+
+            // Get current URL (will work with localhost or network IP)
+            const currentUrl = window.location.href;
+
+            // Display the URL
+            urlElement.innerHTML = `<a href="${currentUrl}" style="color: var(--primary); text-decoration: none;">${currentUrl}</a>`;
+
+            // Clear previous QR
+            qrContainer.innerHTML = '';
+
+            // Generate QR code using QRCode.js
+            if (typeof QRCode !== 'undefined') {
+                new QRCode(qrContainer, {
+                    text: currentUrl,
+                    width: 128,
+                    height: 128,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.L
+                });
+            }
+        }
+
+        // Generate QR on page load
+        generateNetworkQR();
 
         // ========== SCREEN NAVIGATION ==========
         window.goToStart = function () {
