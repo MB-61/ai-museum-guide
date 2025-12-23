@@ -39,22 +39,29 @@ python3 -m uvicorn app.main:app --reload --port 8000
 # Network access:
 python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
+uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
+
 DOSYANIN AÇILACAĞI YER: http://localhost:8000/
 
 --------------------------------------------------------------------------------
 3. VERİ YÜKLEME (RAG) / INGESTION
 --------------------------------------------------------------------------------
-Yeni bir eser metni eklediğinizde ChromaDB'ye yüklemek için bu komutları kullanın.
+TED Müze verilerini ChromaDB'ye yüklemek için aşağıdaki komutları kullanın.
+Veriler `data/ted_museum/` klasöründen okunur (32 eser, ~112 chunk).
 
-### Windows (PowerShell)
+### Tüm Verileri Yükle (Önerilen)
+
+# Windows (PowerShell)
 $env:PYTHONPATH = "."
-python ingestion/ingest.py --exhibit mona_lisa --source data/curated/mona_lisa.txt
-python ingestion/ingest.py --exhibit yildizli_gece --source data/curated/yildizli_gece.txt
+python ingestion/ingest_ted.py --clear    # Eski verileri sil ve yeniden yükle
 
-### macOS / Linux
-export PYTHONPATH=.
-python3 ingestion/ingest.py --exhibit mona_lisa --source data/curated/mona_lisa.txt
-python3 ingestion/ingest.py --exhibit yildizli_gece --source data/curated/yildizli_gece.txt
+# macOS / Linux
+PYTHONPATH=. uv run python ingestion/ingest_ted.py --clear
+
+### Tek Eser Yükle (Opsiyonel)
+
+# macOS / Linux
+PYTHONPATH=. uv run python ingestion/ingest.py --exhibit eser_adi --source data/ted_museum/eser_adi.txt
 
 
 --------------------------------------------------------------------------------
