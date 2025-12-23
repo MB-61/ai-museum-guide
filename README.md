@@ -30,6 +30,8 @@ python -m uvicorn app.main:app --reload --port 8000
 # Aynı ağdaki diğer cihazlar (telefon vb.) erişebilsin diye:
 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
+taskkill /f /im python.exe 2>$null; Start-Sleep -Seconds 2; python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
 ### macOS / Linux
 # Localhost:
 python3 -m uvicorn app.main:app --reload --port 8000
@@ -37,6 +39,7 @@ python3 -m uvicorn app.main:app --reload --port 8000
 # Network access:
 python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
+DOSYANIN AÇILACAĞI YER: http://localhost:8000/
 
 --------------------------------------------------------------------------------
 3. VERİ YÜKLEME (RAG) / INGESTION
