@@ -44,7 +44,7 @@ def create_app() -> FastAPI:
         
         @app.get("/")
         async def serve_frontend():
-            return FileResponse(os.path.join(web_dir, "avatar-guide.html"))
+            return FileResponse(os.path.join(web_dir, "avatar-guide-v2.html"))
 
     return app
 
