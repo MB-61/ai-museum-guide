@@ -84,7 +84,8 @@ class APIKeyRotationManager:
         return ChatGoogleGenerativeAI(
             model=self.model_name,
             temperature=0.2,
-            google_api_key=api_key
+            google_api_key=api_key,
+            max_retries=0  # Disable retries - we handle rotation ourselves
         )
     
     def call_llm_with_retry(

@@ -1,0 +1,11 @@
+1. İlk Kolej Binası Fotoğrafı ve Mimari Çizimleri (1937)
+
+Katalog Açıklaması
+
+Ankara'nın Yenişehir semtinde, Ziya Gökalp Caddesi üzerinde 1937 yılında hizmete giren ilk kolej binasına ait dış cephe fotoğrafı ve varsa mimari eskizleridir.4 Fotoğraf, Erken Cumhuriyet Dönemi mimarisinin karakteristik özelliklerini taşıyan, yalın hatlara sahip, işlevsel ve modern bir eğitim yapısını belgeler. Henüz yoğun yapılaşmanın olmadığı bir Ankara silüetinde yükselen bu bina, başkentin modernleşme aksı olan Kızılay-Kolej hattının gelişiminde öncü bir rol oynamıştır. Binanın mimari dili, dönemin "Yeni Adam"ını yetiştirecek "Yeni Mekan" arayışının bir ürünüdür.
+
+Dijital müzede bu görsel, "Kentin Belleği" teması altında işlenmelidir. Fotoğrafın, günümüzdeki aynı açıyla çekilmiş görüntüsüyle "öncesi-sonrası" (slider) teknolojisi kullanılarak karşılaştırılması, kentsel dönüşümün boyutlarını gözler önüne serecektir. Ayrıca, binanın mimarı (biliniyorsa) ve inşaat süreci hakkında teknik bilgiler, mimarlık tarihi meraklıları için sunulmalıdır. Bu bina, sadece bir okul değil, "Kolej" semtine adını veren bir kentsel simgedir.
+
+Küratoryal Analiz ve Tarihsel Bağlam
+
+1930'lar Ankara'sı, bir bozkır kasabasından modern bir başkente dönüşüm laboratuvarıdır. TED Koleji binası, bu dönüşümün eğitim ayağını temsil eder. Binanın konumu, o dönemde şehrin gelişim yönünü göstermesi açısından stratejiktir. Dijital müzede, bu binanın bulunduğu Ziya Gökalp Caddesi'nin tarihsel haritalar üzerindeki değişimi (GIS tabanlı haritalama) gösterilerek, okulun şehirle nasıl bütünleştiği anlatılmalıdır.
