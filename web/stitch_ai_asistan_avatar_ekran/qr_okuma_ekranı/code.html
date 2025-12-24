@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html class="dark" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QR Okuma Ekranı</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                    animation: {
+                        'scan-vertical': 'scan 2.5s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        scan: {
+                            '0%, 100%': { top: '5%', opacity: '0.4' },
+                            '50%': { top: '95%', opacity: '1' },
+                        }
+                    }
+                },
+            },
+        }
+    </script>
+<style>.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }.glass-panel {
+            background: rgba(16, 22, 34, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }.reticle-corner {
+            box-shadow: 0 0 15px rgba(19, 91, 236, 0.5);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-dark text-white font-display overflow-hidden h-screen w-full relative selection:bg-primary selection:text-white">
+<div class="absolute inset-0 z-0 bg-neutral-900">
+<div class="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 z-10"></div>
+<img class="w-full h-full object-cover opacity-60 blur-sm scale-105" data-alt="Blurred background of a museum gallery with sculptures, simulating a camera viewfinder out of focus" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdVKnqjsSbtnUN1hEbgnIsLtoA9LEI4An9YuBuw8OI8Au7rD5t0TT4TKT9BwqbrQx9ZOa12e3vYjcONZ7sH1T1U0DSZm_UacIx2P4GTJ9mjTUluU0wiv219e1DDcKWVbrHUcq_cTHSewS5vi4hmFXCbnUIdWZBaSmj3ev5xwjYR0dIk78Ft93w4d_feNcNp0lcSKfRFQU7AKMVjjBV9Db9qREYf2gF5UOJ6U2244n_GwXP2Th_XKcnSjMh4q5AyOl0zs_JYBqJjJI"/>
+</div>
+<div class="absolute inset-0 z-10 flex items-center justify-center overflow-hidden pointer-events-none">
+<div class="relative w-72 h-72 md:w-80 md:h-80 rounded-[2rem] shadow-[0_0_0_100vmax_rgba(0,0,0,0.75)]">
+<div class="absolute top-0 left-0 w-10 h-10 border-l-[5px] border-t-[5px] border-primary rounded-tl-2xl -ml-1 -mt-1 reticle-corner"></div>
+<div class="absolute top-0 right-0 w-10 h-10 border-r-[5px] border-t-[5px] border-primary rounded-tr-2xl -mr-1 -mt-1 reticle-corner"></div>
+<div class="absolute bottom-0 left-0 w-10 h-10 border-l-[5px] border-b-[5px] border-primary rounded-bl-2xl -ml-1 -mb-1 reticle-corner"></div>
+<div class="absolute bottom-0 right-0 w-10 h-10 border-r-[5px] border-b-[5px] border-primary rounded-br-2xl -mr-1 -mb-1 reticle-corner"></div>
+<div class="absolute left-4 right-4 h-0.5 bg-primary shadow-[0_0_20px_#135bec] rounded-full animate-scan-vertical"></div>
+<div class="absolute inset-0 bg-primary/5 animate-pulse-slow rounded-[2rem]"></div>
+</div>
+</div>
+<div class="absolute inset-0 z-20 flex flex-col justify-between p-4 pb-8 safe-area-inset-bottom">
+<header class="pt-8 px-2 flex items-center justify-between">
+<button class="group glass-panel flex size-12 items-center justify-center rounded-full text-white transition-all active:scale-95 hover:bg-white/10">
+<span class="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">close</span>
+</button>
+<div class="glass-panel px-4 py-1.5 rounded-full flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">qr_code_scanner</span>
+<span class="text-sm font-bold tracking-wide uppercase opacity-90">QR Tarayıcı</span>
+</div>
+<button class="group glass-panel flex size-12 items-center justify-center rounded-full text-white transition-all active:scale-95 hover:bg-white/10">
+<span class="material-symbols-outlined group-hover:text-yellow-300 transition-colors">flash_on</span>
+</button>
+</header>
+<div class="flex-1"></div>
+<div class="flex flex-col items-center gap-6 w-full max-w-md mx-auto">
+<div class="text-center space-y-3 px-6 animate-[fadeIn_0.5s_ease-out]">
+<h2 class="text-white text-[26px] font-bold leading-tight tracking-tight drop-shadow-lg">
+                    Eserin yanındaki karekodu okutun
+                </h2>
+<p class="text-white/80 text-base font-normal leading-relaxed drop-shadow-md">
+                    Yapay zeka asistanının eseri tanıması için kamerayı karekoda odaklayın.
+                </p>
+</div>
+<div class="flex items-center gap-2 opacity-60">
+<span class="material-symbols-outlined text-xs">smart_toy</span>
+<span class="text-[10px] font-bold uppercase tracking-[0.15em]">AI Asistan Aktif</span>
+</div>
+</div>
+</div>
+
+</body></html>
