@@ -1,0 +1,11 @@
+Ziya Gökalp Yerleşkesi Maketi
+
+Katalog Açıklaması
+
+TED Ankara Koleji'nin 1937 yılından 2004-2005 yılına kadar eğitim verdiği Ziya Gökalp Caddesi yerleşkesinin, tüm binalarını, bahçelerini ve spor alanlarını içeren, orijinaline sadık kalınarak hazırlanmış detaylı mimari maketidir.4 Günümüzde İncek Kampüsü'ndeki müzede sergilenen bu maket, fiziksel olarak artık var olmayan bir kampüsün üç boyutlu hafızasıdır. Maket üzerinde, 1930'lardan 1960'lara kadar farklı dönemlerde inşa edilen ek binalar, okulun büyüme sürecini ve artan talebi karşılama çabasını kronolojik olarak gösterir.5
+
+Dijital müzede bu maket, fotogrametri yöntemiyle taranarak 3 boyutlu, döndürülebilir ve yakınlaştırılabilir bir sanal obje haline getirilmelidir. Kullanıcılar, sanal ortamda maketin üzerinde gezinebilmeli, "Ortaokul Binası", "Spor Salonu", "Arka Bahçe" gibi etiketlere tıklayarak o mekanlarla ilgili anılara, fotoğraflara ve videolara ulaşabilmelidir. Bu obje, mezunlar için duygusal bir "eve dönüş" (homecoming) deneyimi yaratırken, yeni nesil öğrenciler için okulun köklerini somutlaştırır.
+
+Küratoryal Analiz ve Tarihsel Bağlam
+
+Bu maket, kaybolan bir mekanın (lieu de mémoire) yeniden inşasıdır. Ziya Gökalp kampüsü, sadece dersliklerden ibaret değil, binlerce öğrencinin sosyalleştiği bir yaşam alanıydı. Maketin dijital versiyonuna entegre edilecek "Sözlü Tarih Haritası" ile mezunların "Şu ağacın altında toplanırdık", "Bu merdivenlerde fotoğraf çektirirdik" gibi anıları, maket üzerindeki ilgili noktalara iliştirilmelidir. Bu, mekanı soğuk bir mimari modelden yaşayan bir hafıza mekanına dönüştürür.

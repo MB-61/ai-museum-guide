@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html class="dark" lang="tr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>AI Müze Rehberi - KODE-X</title>
+    <meta name="description"
+        content="Yapay zeka destekli müze rehberiniz. QR kod okutarak veya doğrudan sorarak eserler hakkında bilgi alın." />
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                        "surface-dark": "#1a2230",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: { "DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "2xl": "2rem", "full": "9999px" },
+                    animation: {
+                        'scan-vertical': 'scan 2.5s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        scan: {
+                            '0%, 100%': { top: '5%', opacity: '0.4' },
+                            '50%': { top: '95%', opacity: '1' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                },
+            },
+        }
+    </script>
+
+    <!-- QR Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <!-- QR Code Generator Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+    <!-- Azure Speech SDK -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk@latest/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle-min.js"></script>
+
+    <!-- Three.js & TalkingHead -->
+    <script type="importmap">
+    { "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js/+esm",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
+        "talkinghead": "https://cdn.jsdelivr.net/gh/met4citizen/TalkingHead@1.7/modules/talkinghead.mjs"
+    }}
+    </script>
+
+    <style>
+        body {
+            min-height: 100dvh;
+            overflow: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(16, 22, 34, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .reticle-corner {
+            box-shadow: 0 0 15px rgba(19, 91, 236, 0.5);
+        }
+
+        .text-shadow {
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Hide screens by default */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Avatar container */
+        #avatar-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        #avatar-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Recording animation */
+        .recording {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* Message styles */
+        .message {
+            padding: 12px 16px;
+            border-radius: 16px;
+            margin: 8px 0;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #135bec, #3b82f6);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.system {
+            background: rgba(19, 91, 236, 0.2);
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            font-size: 0.85rem;
+            margin: 8px auto;
+        }
+
+        /* html5-qrcode camera styles */
+        #qr-reader {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        #qr-reader video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+
+        /* Hide only dashboard buttons, keep scan area visible */
+        #qr-reader__dashboard {
+            display: none !important;
+        }
+
+        #qr-reader__dashboard_section {
+            display: none !important;
+        }
+
+        #qr-reader img[alt="Scan QR Code"] {
+            display: none !important;
+        }
+
+        /* Disable mic button when disabled */
+        #mic-btn:disabled {
+            pointer-events: none;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body class="bg-background-dark text-white font-display overflow-hidden select-none">
+
+    <!-- ========== SCREEN 1: START ========== -->
+    <div id="start-screen" class="screen active flex-col h-screen w-full max-w-md mx-auto relative overflow-hidden">
+        <!-- Hero Image -->
+        <div class="relative w-full h-[45%] flex-shrink-0">
+            <div class="absolute inset-0 bg-cover bg-center rounded-b-2xl shadow-2xl z-0"
+                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCAdxbI8KbjTnLvBEqsMEx06_tdzXEv0YTfRhiBkPac7veTbmMPauHCjntUTvZvzGaADoSO5FHdorMoq6QTdeoNFttIsg3pZtm--emBZY-dmk_GTerWASg1RQkWX1PoldqR3EbV8ZXoXmrHIEKykuabs4vvoIE9Jk_7A2JW-zwuk9jKyXuIkMsDI_AgCTD8pfx_6f7_RDKG7-oLHvNH8bt-Srsm7x4zNw-92pC44BLSeqjq85-TdSE4bMQZYIJIl3_oM5T9cW_37fw");'>
+            </div>
+            <div
+                class="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent opacity-90 rounded-b-2xl">
+            </div>
+
+            <!-- Top Badge -->
+            <div class="absolute top-0 left-0 w-full p-6 pt-12 flex justify-center z-10">
+                <div
+                    class="bg-black/30 backdrop-blur-md border border-white/10 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-lg shadow-black/20">
+                    <span class="material-symbols-outlined text-primary text-[20px]">smart_toy</span>
+                    <span class="text-xs font-bold tracking-widest uppercase text-white/90">KODE-X</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="flex-1 flex flex-col justify-between pb-4 px-4 -mt-8 z-10 overflow-hidden">
+            <!-- Title -->
+            <div class="mb-3 text-center">
+                <h1
+                    class="text-3xl font-bold leading-tight tracking-tight mb-2 text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-400">
+                    TED Kolej Müzesi
+                </h1>
+                <p class="text-slate-400 text-base font-body font-normal leading-relaxed max-w-[280px] mx-auto">
+                    Kişisel yapay zeka rehberiniz ile tarihi yeniden keşfedin.
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col gap-3 w-full">
+                <button onclick="startWithQR()"
+                    class="group relative flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-6 bg-primary hover:bg-blue-600 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/25">
+                    <div
+                        class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                    </div>
+                    <span
+                        class="material-symbols-outlined mr-3 text-white group-hover:scale-110 transition-transform">qr_code_scanner</span>
+                    <span class="text-white text-lg font-bold tracking-wide">QR Kodu Tara</span>
+                </button>
+
+                <button onclick="startWithoutQR()"
+                    class="group flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-6 bg-surface-dark border border-white/5 hover:bg-white/5 active:scale-[0.98] transition-all duration-200">
+                    <span
+                        class="material-symbols-outlined mr-3 text-slate-300 group-hover:text-white transition-colors">person</span>
+                    <span
+                        class="text-slate-300 group-hover:text-white text-base font-semibold tracking-wide transition-colors">QR
+                        Olmadan Devam Et</span>
+                </button>
+            </div>
+
+            <!-- Network Info - Compact -->
+            <div id="network-info" class="mt-4 glass-panel rounded-xl p-3">
+                <div class="flex items-center gap-3">
+                    <div id="network-qr" class="bg-white p-1.5 rounded-lg flex-shrink-0"></div>
+                    <div class="text-left">
+                        <div class="text-[10px] text-slate-400 mb-1">📱 Mobil bağlantı:</div>
+                        <div id="network-url" class="font-mono text-[10px] text-primary break-all">Yükleniyor...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Version -->
+            <div class="mt-2 text-center">
+                <p class="text-[9px] text-slate-600 font-body uppercase tracking-wider">
+                    Versiyon 2.0 • TED Kolej
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== SCREEN 2: QR SCANNER ========== -->
+    <div id="qr-screen" class="screen flex-col h-screen w-full relative overflow-hidden bg-black">
+        <!-- Camera - html5-qrcode handles everything -->
+        <div id="qr-reader" class="absolute inset-0 z-0"></div>
+
+        <!-- Header with Test Select -->
+        <header class="absolute top-0 left-0 right-0 z-30 pt-3 px-3 flex items-center justify-between">
+            <!-- Close Button - Left Side -->
+            <button onclick="goToStart()"
+                class="glass-panel flex size-10 items-center justify-center rounded-full text-white active:scale-95">
+                <span class="material-symbols-outlined text-xl">close</span>
+            </button>
+
+            <!-- Title -->
+            <div class="glass-panel px-3 py-1 rounded-full flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-primary text-sm">qr_code_scanner</span>
+                <span class="text-xs font-bold uppercase">QR Tara</span>
+            </div>
+
+            <!-- Test Select - Right Side -->
+            <div class="glass-panel px-2 py-1 rounded-lg flex items-center gap-1">
+                <span class="material-symbols-outlined text-primary text-sm">science</span>
+                <select id="qr-test-select" onchange="autoTestQR(this.value)"
+                    class="bg-transparent text-white text-xs border-none focus:ring-0 cursor-pointer max-w-[100px]">
+                    <option value="" class="bg-background-dark">Test</option>
+                </select>
+            </div>
+        </header>
+
+        <!-- Bottom Info - Simple -->
+        <div
+            class="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-black via-black/80 to-transparent pt-4 pb-16 px-4">
+            <p class="text-white text-center text-base font-medium">QR Kodu Okutun</p>
+        </div>
+    </div>
+
+    <!-- ========== SCREEN 3: CHAT / AVATAR ========== -->
+    <div id="chat-screen" class="screen flex-col h-screen w-full relative">
+        <!-- Avatar Background - Shifted Up -->
+        <div class="absolute inset-0 z-0">
+            <div id="avatar-container" class="h-full w-full" style="transform: translateY(-8%) scale(1.1);"></div>
+            <!-- Gradient overlay -->
+            <div
+                class="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-background-dark/80 pointer-events-none">
+            </div>
+        </div>
+
+        <!-- Top Bar - Compact -->
+        <div
+            class="relative z-20 flex items-center px-3 py-2 justify-between glass-panel border-b border-white/5 mx-3 mt-2 rounded-xl">
+            <div class="flex items-center gap-2">
+                <button onclick="goToStart()"
+                    class="flex items-center justify-center size-8 rounded-full hover:bg-white/10 active:bg-white/20 transition-colors">
+                    <span class="material-symbols-outlined text-white"
+                        style="font-size: 20px;">arrow_back_ios_new</span>
+                </button>
+                <div class="flex flex-col">
+                    <h2 class="text-white text-base font-bold leading-tight">KODE-X</h2>
+                    <span id="mode-indicator" class="text-[10px] text-primary font-medium uppercase">Asistan</span>
+                </div>
+            </div>
+            <div id="exhibit-badge" class="flex items-center bg-white/10 px-2 py-1 rounded-lg border border-white/10"
+                style="display: none;">
+                <span class="material-symbols-outlined text-primary mr-1"
+                    style="font-size: 14px;">qr_code_scanner</span>
+                <p id="exhibit-name" class="text-white text-xs font-bold truncate max-w-[100px]">Eser</p>
+            </div>
+        </div>
+
+        <!-- Status Text -->
+        <div class="flex-1 relative z-10 flex flex-col items-center justify-center pointer-events-none">
+            <div id="status-floating" class="mt-auto mb-10 px-6 text-center">
+                <p id="status-text" class="text-white/80 text-lg font-medium text-shadow animate-float">Hazır</p>
+            </div>
+        </div>
+
+        <!-- Sample Questions (non-QR mode) -->
+        <!-- Messages Container (minimized by default, expands on interaction) -->
+        <div id="messages-panel" class="relative z-30 w-full px-4 mb-4" style="display: none;">
+            <div class="glass-panel rounded-xl overflow-hidden max-w-md mx-auto">
+                <div class="flex justify-center pt-2 pb-1 w-full cursor-pointer" onclick="toggleMessages()">
+                    <div class="h-1 w-12 rounded-full bg-white/20"></div>
+                </div>
+                <div id="messages" class="max-h-32 overflow-y-auto no-scrollbar px-4 pb-4"></div>
+            </div>
+        </div>
+
+        <!-- Bottom Interaction Zone - Moved Up -->
+        <div class="relative z-30 flex flex-col items-center w-full px-4 pb-24 gap-4">
+            <!-- Chat Input (Hidden by default, shown when typing) -->
+            <div id="chat-input-panel" class="w-full max-w-md glass-panel rounded-xl p-3" style="display: none;">
+                <div class="flex items-center gap-3">
+                    <input type="text" id="chat-input" placeholder="Mesajınızı yazın..."
+                        class="flex-1 bg-transparent text-white text-sm border-none focus:ring-0 placeholder:text-slate-400 disabled:opacity-50"
+                        onkeypress="handleKeyPress(event)">
+                    <button onclick="sendMessage()" id="send-btn"
+                        class="bg-primary hover:bg-blue-600 text-white p-2 rounded-lg transition-colors disabled:opacity-50">
+                        <span class="material-symbols-outlined" style="font-size: 20px;">send</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Controls -->
+            <div class="flex items-center justify-center gap-6 w-full max-w-md">
+
+                <!-- Stop Button - Left Side (Hidden when not speaking) -->
+                <button id="stop-btn" onclick="stopSpeech()"
+                    class="flex items-center justify-center size-12 rounded-full glass-panel text-red-400 hover:bg-red-500/20 transition-all border border-red-500/50"
+                    style="display: none;">
+                    <span class="material-symbols-outlined">stop</span>
+                </button>
+
+                <!-- Placeholder when stop hidden -->
+                <div id="stop-placeholder" class="size-12"></div>
+
+                <!-- Primary Microphone Button -->
+                <div class="relative group">
+                    <div id="mic-pulse-1"
+                        class="absolute inset-0 bg-red-500/50 rounded-full animate-ping opacity-0 duration-[3s] pointer-events-none">
+                    </div>
+                    <div id="mic-pulse-2"
+                        class="absolute inset-[-4px] bg-red-500/30 rounded-full animate-pulse opacity-0 pointer-events-none">
+                    </div>
+                    <button id="mic-btn" onmousedown="micDown()" onmouseup="micUp()" onmouseleave="micUp()"
+                        ontouchstart="micDown()" ontouchend="micUp()" ontouchcancel="micUp()"
+                        class="relative flex size-20 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-gradient-to-tr from-primary to-blue-500 text-white shadow-[0_0_40px_-10px_rgba(19,91,236,0.6)] hover:scale-105 active:scale-95 transition-all duration-300 z-10 border-4 border-background-dark/30">
+                        <span id="mic-icon" class="material-symbols-outlined" style="font-size: 36px;">mic</span>
+                    </button>
+                </div>
+
+                <!-- Text Input Toggle -->
+                <button onclick="toggleChatInput()"
+                    class="flex items-center justify-center size-12 rounded-full glass-panel text-white hover:bg-white/10 transition-all border border-white/10">
+                    <span class="material-symbols-outlined">edit_note</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast"
+        class="fixed top-6 left-1/2 -translate-x-1/2 z-50 glass-panel px-6 py-3 rounded-full flex items-center gap-3 opacity-0 transition-all duration-300 -translate-y-4">
+        <span id="toast-icon" class="material-symbols-outlined text-primary">check_circle</span>
+        <span id="toast-message" class="text-sm font-medium">Mesaj</span>
+    </div>
+
+    <!-- JavaScript -->
+    <script type="module">
+        import { TalkingHead } from "talkinghead";
+
+        // ========== STATE ==========
+        let currentScreen = 'start';
+        let qrMode = false;
+        let currentQrId = null;
+        let currentExhibitId = null;
+        let currentExhibitTitle = null;
+
+        let head = null;
+        let isAvatarReady = false;
+        let audioContext = null;
+        let morphMeshes = [];
+
+        let html5QrCode = null;
+        let recognition = null;
+        let isListening = false;
+
+        let conversationHistory = [];
+        let currentAudioSource = null;
+        let isSpeaking = false;
+
+        const API_BASE = window.location.origin + '/api/v1';
+        let AZURE_KEY = '';
+        let AZURE_REGION = 'westeurope';
+
+        // QR Mappings for test dropdown
+        const QR_EXHIBITS = {
+            "qr_01": "Türk Maarif Cemiyeti Tüzüğü",
+            "qr_02": "Atatürk Fotoğrafı",
+            "qr_03": "Kuruluş Diploması",
+            "qr_04": "Bando Kıyafeti",
+            "qr_05": "Spor Kupası",
+            "qr_06": "İlk Zil",
+            "qr_07": "Mimari Maket",
+            "qr_08": "Eğitim Sırası",
+            "qr_09": "Nota Defteri",
+            "qr_10": "Daktilo Makinesi"
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAzureConfig();
+            generateNetworkQR();
+            populateTestDropdown();
+        });
+
+        // ========== CONFIG ==========
+        async function loadAzureConfig() {
+            try {
+                const response = await fetch(`${API_BASE}/voice/azure-config`);
+                if (response.ok) {
+                    const config = await response.json();
+                    AZURE_KEY = config.key || '';
+                    AZURE_REGION = config.region || 'westeurope';
+                }
+            } catch (err) {
+                console.warn('Could not load Azure config:', err);
+            }
+        }
+
+        function generateNetworkQR() {
+            const urlElement = document.getElementById('network-url');
+            const qrContainer = document.getElementById('network-qr');
+            const currentUrl = window.location.href;
+
+            if (urlElement) {
+                urlElement.innerHTML = `<a href="${currentUrl}" class="text-primary hover:underline">${currentUrl}</a>`;
+            }
+
+            if (qrContainer && typeof QRCode !== 'undefined') {
+                qrContainer.innerHTML = '';
+                new QRCode(qrContainer, {
+                    text: currentUrl,
+                    width: 64,
+                    height: 64,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.L
+                });
+            }
+        }
+
+        function populateTestDropdown() {
+            const select = document.getElementById('qr-test-select');
+            if (!select) return;
+
+            // Generate qr_01 to qr_31 with simple labels
+            for (let i = 1; i <= 31; i++) {
+                const num = i.toString().padStart(2, '0');
+                const option = document.createElement('option');
+                option.value = `qr_${num}`;
+                option.textContent = num;
+                option.className = 'bg-background-dark';
+                select.appendChild(option);
+            }
+        }
+
+        // ========== NAVIGATION ==========
+        window.goToStart = function () {
+            stopQRScanner();
+            showScreen('start');
+            qrMode = false;
+            currentQrId = null;
+            currentExhibitId = null;
+            currentExhibitTitle = null;
+            conversationHistory = [];
+        };
+
+        window.startWithQR = function () {
+            qrMode = true;
+            conversationHistory = [];
+            showScreen('qr');
+            startQRScanner();
+        };
+
+        window.startWithoutQR = function () {
+            qrMode = false;
+            conversationHistory = [];
+            showScreen('chat');
+            initChatScreen();
+        };
+
+        function showScreen(screenName) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenName + '-screen').classList.add('active');
+            currentScreen = screenName;
+        }
+
+        // ========== QR SCANNER ==========
+        function startQRScanner() {
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("qr-reader");
+            }
+
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                onQRSuccess,
+                () => { }
+            ).catch(err => {
+                console.error('Camera error:', err);
+                showToast('Kamera erişimi sağlanamadı', 'error');
+            });
+        }
+
+        function stopQRScanner() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().catch(() => { });
+            }
+        }
+
+        async function onQRSuccess(decodedText) {
+            if (currentQrId === decodedText) return;
+
+            currentQrId = decodedText;
+            showToast('QR Kod okundu: ' + decodedText, 'success');
+            stopQRScanner();
+
+            try {
+                const response = await fetch(`${API_BASE}/qr/lookup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ qr_id: decodedText })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    currentExhibitId = data.exhibit_id || decodedText;
+                    currentExhibitTitle = data.title || QR_EXHIBITS[decodedText] || decodedText;
+
+                    showScreen('chat');
+                    initChatScreen();
+                    addSystemMessage(`🖼️ "${currentExhibitTitle}" eseri seçildi.`);
+                } else {
+                    // API failed but we have the QR code, continue anyway
+                    console.warn('QR lookup failed, using fallback');
+                    currentExhibitId = decodedText;
+                    currentExhibitTitle = QR_EXHIBITS[decodedText] || decodedText;
+
+                    showScreen('chat');
+                    initChatScreen();
+                    addSystemMessage(`🖼️ "${currentExhibitTitle}" eseri seçildi.`);
+                }
+            } catch (err) {
+                console.error('QR lookup error:', err);
+                // Fallback - still transition to chat
+                currentExhibitId = decodedText;
+                currentExhibitTitle = QR_EXHIBITS[decodedText] || decodedText;
+
+                showScreen('chat');
+                initChatScreen();
+                addSystemMessage(`🖼️ "${currentExhibitTitle}" eseri seçildi.`);
+            }
+        }
+
+        // Auto-test on select change (no button needed)
+        window.autoTestQR = function (qrId) {
+            if (!qrId) return;  // Ignore empty selection
+            stopQRScanner();
+            onQRSuccess(qrId);
+        };
+
+        // ========== CHAT SCREEN ==========
+        function initChatScreen() {
+            const modeIndicator = document.getElementById('mode-indicator');
+            const exhibitBadge = document.getElementById('exhibit-badge');
+            const exhibitName = document.getElementById('exhibit-name');
+
+            if (qrMode && currentExhibitTitle) {
+                modeIndicator.textContent = 'Eser Modu';
+                exhibitBadge.style.display = 'flex';
+                exhibitName.textContent = currentExhibitTitle;
+            } else {
+                modeIndicator.textContent = 'Genel Mod';
+                exhibitBadge.style.display = 'none';
+                addSystemMessage('👋 Hoş geldiniz! Müze hakkında sorularınızı sorun.');
+            }
+
+            initAvatar();
+            initSpeechRecognition();
+        }
+
+        // ========== AVATAR ==========
+        async function initAvatar() {
+            setStatus('Avatar yükleniyor...');
+
+            try {
+                const nodeAvatar = document.getElementById('avatar-container');
+                head = new TalkingHead(nodeAvatar, {
+                    ttsEndpoint: null,
+                    lipsyncModules: ["en"],
+                    cameraView: "upper",
+                    cameraRotateEnable: false
+                });
+
+                await head.showAvatar({
+                    url: '/static/avatar.glb',
+                    body: 'M',
+                    avatarMood: 'neutral',
+                    lipsyncLang: 'en'
+                }, (ev) => {
+                    if (ev.lengthComputable) {
+                        const pct = Math.round((ev.loaded / ev.total) * 100);
+                        setStatus(`Yükleniyor: ${pct}%`);
+                    }
+                });
+
+                // Get morph meshes for lip sync - use head.scene like working version
+                morphMeshes = [];
+                if (head?.scene) {
+                    head.scene.traverse(node => {
+                        if (node.isMesh && node.morphTargetDictionary && node.morphTargetInfluences) {
+                            const visemeKeys = Object.keys(node.morphTargetDictionary).filter(k => k.startsWith('viseme_'));
+                            if (visemeKeys.length > 0) {
+                                console.log('Found viseme mesh:', node.name, visemeKeys);
+                                morphMeshes.push({
+                                    mesh: node,
+                                    dict: node.morphTargetDictionary,
+                                    influences: node.morphTargetInfluences
+                                });
+                            }
+                        }
+                    });
+                }
+
+                console.log('Total morph meshes found:', morphMeshes.length);
+
+                isAvatarReady = true;
+                setStatus('Hazır');
+                showToast('Avatar hazır', 'success');
+
+            } catch (err) {
+                console.error('Avatar load error:', err);
+                setStatus('Avatar yüklenemedi');
+                showToast('Avatar yüklenemedi', 'error');
+            }
+        }
+
+        // ========== AUDIO & LIP SYNC ==========
+        const visemeConfig = {
+            0: { name: "sil", intensity: 0 },
+            1: { name: "aa", intensity: 0.8 },
+            2: { name: "aa", intensity: 0.7 },
+            3: { name: "O", intensity: 0.7 },
+            4: { name: "E", intensity: 0.6 },
+            5: { name: "I", intensity: 0.5 },
+            6: { name: "I", intensity: 0.5 },
+            7: { name: "U", intensity: 0.7 },
+            8: { name: "O", intensity: 0.6 },
+            9: { name: "aa", intensity: 0.7 },
+            10: { name: "O", intensity: 0.6 },
+            11: { name: "I", intensity: 0.5 },
+            12: { name: "kk", intensity: 0.4 },
+            13: { name: "RR", intensity: 0.5 },
+            14: { name: "nn", intensity: 0.4 },
+            15: { name: "SS", intensity: 0.5 },
+            16: { name: "CH", intensity: 0.6 },
+            17: { name: "TH", intensity: 0.5 },
+            18: { name: "FF", intensity: 0.6 },
+            19: { name: "DD", intensity: 0.5 },
+            20: { name: "kk", intensity: 0.4 },
+            21: { name: "PP", intensity: 0.8 }
+        };
+
+        const visemeNames = ['sil', 'aa', 'E', 'I', 'O', 'U', 'PP', 'FF', 'TH', 'DD', 'kk', 'CH', 'SS', 'nn', 'RR'];
+        let currentVisemeValues = {};
+        visemeNames.forEach(v => currentVisemeValues[v] = 0);
+
+        async function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioContext.state === 'suspended') await audioContext.resume();
+            return audioContext;
+        }
+
+        function pcmToAudioBuffer(pcmData, sampleRate) {
+            const audioBuffer = audioContext.createBuffer(1, pcmData.length, sampleRate);
+            const channelData = audioBuffer.getChannelData(0);
+            for (let i = 0; i < pcmData.length; i++) {
+                channelData[i] = pcmData[i] / 32768.0;
+            }
+            return audioBuffer;
+        }
+
+        function playAudioBuffer(audioBuffer) {
+            return new Promise(resolve => {
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(audioContext.destination);
+                source.onended = () => {
+                    currentAudioSource = null;
+                    resolve();
+                };
+                currentAudioSource = source;
+                source.start();
+            });
+        }
+
+        let lipSyncAnimationId = null;
+
+        window.stopSpeech = function () {
+            if (currentAudioSource) {
+                try {
+                    currentAudioSource.stop();
+                } catch (e) { }
+                currentAudioSource = null;
+            }
+            if (lipSyncAnimationId) {
+                cancelAnimationFrame(lipSyncAnimationId);
+                lipSyncAnimationId = null;
+            }
+            isSpeaking = false;
+            resetVisemes();
+            setStatus('Durduruldu');
+            document.getElementById('stop-btn').style.display = 'none';
+            document.getElementById('stop-placeholder').style.display = 'block';
+
+            // Reset mic button to blue and enable
+            const micBtn = document.getElementById('mic-btn');
+            micBtn.classList.remove('from-gray-500', 'to-gray-600', 'from-red-500', 'to-red-600');
+            micBtn.classList.add('from-primary', 'to-blue-500');
+            micBtn.disabled = false;
+
+            // Re-enable chat input
+            document.getElementById('chat-input').disabled = false;
+            document.getElementById('chat-input').placeholder = 'Mesajınızı yazın...';
+            document.getElementById('send-btn').disabled = false;
+            showToast('Konuşma durduruldu', 'info');
+        };
+
+        function setVisemeSmooth(targetViseme, targetIntensity, lerpSpeed = 0.35) {
+            visemeNames.forEach(v => {
+                const target = (v === targetViseme) ? targetIntensity : 0;
+                currentVisemeValues[v] += (target - currentVisemeValues[v]) * lerpSpeed;
+
+                const fullName = 'viseme_' + v;
+                morphMeshes.forEach(m => {
+                    const idx = m.dict[fullName];
+                    if (idx !== undefined) {
+                        m.influences[idx] = Math.max(0, currentVisemeValues[v]);
+                    }
+                });
+            });
+        }
+
+        function resetVisemes() {
+            visemeNames.forEach(v => currentVisemeValues[v] = 0);
+            morphMeshes.forEach(m => {
+                Object.keys(m.dict).forEach(key => {
+                    if (key.startsWith('viseme_')) {
+                        m.influences[m.dict[key]] = 0;
+                    }
+                });
+            });
+        }
+
+        async function animateLipSync(visemeData, totalDuration) {
+            if (visemeData.length === 0) return;
+
+            const startTime = performance.now();
+            let currentIdx = 0;
+
+            return new Promise(resolve => {
+                function update() {
+                    if (!isSpeaking) {
+                        resetVisemes();
+                        resolve();
+                        return;
+                    }
+
+                    const elapsed = performance.now() - startTime;
+
+                    while (currentIdx < visemeData.length - 1 && visemeData[currentIdx + 1].time <= elapsed) {
+                        currentIdx++;
+                    }
+
+                    const current = visemeData[currentIdx];
+                    const config = visemeConfig[current.id] || { name: "sil", intensity: 0 };
+                    setVisemeSmooth(config.name, config.intensity);
+
+                    if (elapsed < totalDuration * 1000 && isSpeaking) {
+                        lipSyncAnimationId = requestAnimationFrame(update);
+                    } else {
+                        let fadeStep = 0;
+                        function fadeOut() {
+                            fadeStep++;
+                            setVisemeSmooth("sil", 0, 0.2);
+                            if (fadeStep < 10) {
+                                requestAnimationFrame(fadeOut);
+                            } else {
+                                resetVisemes();
+                                lipSyncAnimationId = null;
+                                resolve();
+                            }
+                        }
+                        fadeOut();
+                    }
+                }
+                lipSyncAnimationId = requestAnimationFrame(update);
+            });
+        }
+
+        async function speakWithAvatar(text) {
+            if (!AZURE_KEY || AZURE_KEY === 'YOUR_AZURE_SPEECH_KEY_HERE') {
+                showToast('Azure API anahtarı gerekli', 'error');
+                setStatus('API anahtarı eksik');
+                return;
+            }
+
+            setStatus('Konuşuyor...');
+            isSpeaking = true;
+
+            // Show stop button, hide placeholder
+            document.getElementById('stop-btn').style.display = 'flex';
+            document.getElementById('stop-placeholder').style.display = 'none';
+
+            // Make mic button gray (disabled look)
+            const micBtn = document.getElementById('mic-btn');
+            micBtn.classList.remove('from-primary', 'to-blue-500', 'from-red-500', 'to-red-600');
+            micBtn.classList.add('from-gray-500', 'to-gray-600');
+
+            document.getElementById('mic-pulse-1').classList.add('opacity-0');
+            document.getElementById('mic-pulse-2').classList.add('opacity-0');
+
+            // Lock chat input while speaking
+            document.getElementById('chat-input').disabled = true;
+            document.getElementById('chat-input').placeholder = 'AI konuşuyor...';
+            document.getElementById('send-btn').disabled = true;
+
+            await initAudioContext();
+
+            const voiceName = 'tr-TR-AhmetNeural';
+            const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xml:lang="tr-TR">
+                <voice name="${voiceName}">
+                    <mstts:viseme type="redlips_front"/>
+                    ${text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+                </voice>
+            </speak>`;
+
+            const config = SpeechSDK.SpeechConfig.fromSubscription(AZURE_KEY, AZURE_REGION);
+            config.speechSynthesisOutputFormat = SpeechSDK.SpeechSynthesisOutputFormat.Raw24Khz16BitMonoPcm;
+
+            const synth = new SpeechSDK.SpeechSynthesizer(config, null);
+            const visemeData = [];
+
+            synth.visemeReceived = (s, e) => {
+                visemeData.push({ id: e.visemeId, time: e.audioOffset / 10000 });
+            };
+
+            return new Promise((resolve, reject) => {
+                synth.speakSsmlAsync(ssml,
+                    async result => {
+                        if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+                            const pcmData = new Int16Array(result.audioData);
+                            const audioBuffer = pcmToAudioBuffer(pcmData, 24000);
+
+                            await Promise.all([
+                                playAudioBuffer(audioBuffer),
+                                animateLipSync(visemeData, audioBuffer.duration)
+                            ]);
+
+                            isSpeaking = false;
+                            document.getElementById('stop-btn').style.display = 'none';
+                            document.getElementById('stop-placeholder').style.display = 'block';
+                            setStatus('Hazır');
+
+                            // Reset mic button to blue and enable
+                            const micBtn = document.getElementById('mic-btn');
+                            micBtn.classList.remove('from-gray-500', 'to-gray-600', 'from-red-500', 'to-red-600');
+                            micBtn.classList.add('from-primary', 'to-blue-500');
+                            micBtn.disabled = false;
+
+                            // Re-enable chat input
+                            document.getElementById('chat-input').disabled = false;
+                            document.getElementById('chat-input').placeholder = 'Mesajınızı yazın...';
+                            document.getElementById('send-btn').disabled = false;
+
+                            resolve();
+                        } else {
+                            isSpeaking = false;
+                            document.getElementById('stop-btn').style.display = 'none';
+                            setStatus('TTS hatası');
+                            reject(result.errorDetails);
+                        }
+                        synth.close();
+                    },
+                    error => {
+                        isSpeaking = false;
+                        document.getElementById('stop-btn').style.display = 'none';
+                        setStatus('Bağlantı hatası');
+                        synth.close();
+                        reject(error);
+                    }
+                );
+            });
+        }
+
+        // ========== CHAT ==========
+        window.sendMessage = async function () {
+            const input = document.getElementById('chat-input');
+            const question = input.value.trim();
+            if (!question) return;
+
+            addMessage(question, 'user');
+            input.value = '';
+            // Close chat input panel after sending
+            document.getElementById('chat-input-panel').style.display = 'none';
+            showMessagesPanel();
+            setStatus('Düşünüyor...');
+
+            // Lock chat input while thinking
+            input.disabled = true;
+            input.placeholder = 'AI düşünüyor...';
+            document.getElementById('send-btn').disabled = true;
+
+            // Disable mic button (turn gray) while thinking
+            const micBtn = document.getElementById('mic-btn');
+            micBtn.classList.remove('from-primary', 'to-blue-500', 'from-red-500', 'to-red-600');
+            micBtn.classList.add('from-gray-500', 'to-gray-600');
+            micBtn.disabled = true;
+
+            try {
+                const payload = {
+                    question,
+                    history: conversationHistory
+                };
+                if (qrMode && currentQrId) {
+                    payload.qr_id = currentQrId;
+                }
+
+                const response = await fetch(`${API_BASE}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error('API Error');
+
+                const data = await response.json();
+                addMessage(data.answer, 'bot');
+
+                conversationHistory.push({ role: 'user', content: question });
+                conversationHistory.push({ role: 'assistant', content: data.answer });
+                if (conversationHistory.length > 10) {
+                    conversationHistory = conversationHistory.slice(-10);
+                }
+
+                await speakWithAvatar(data.answer);
+
+            } catch (err) {
+                console.error('Chat error:', err);
+                addMessage('Üzgünüm, bir hata oluştu.', 'bot');
+                setStatus('Hata');
+            }
+        };
+
+        window.handleKeyPress = function (event) {
+            if (event.key === 'Enter') sendMessage();
+        };
+
+        window.askSample = function (question) {
+            document.getElementById('chat-input').value = question;
+            sendMessage();
+            document.getElementById('sample-questions').style.display = 'none';
+        };
+
+        function addMessage(text, type) {
+            const messages = document.getElementById('messages');
+            const msg = document.createElement('div');
+            msg.className = `message ${type}`;
+            msg.textContent = text;
+            messages.appendChild(msg);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function addSystemMessage(text) {
+            addMessage(text, 'system');
+            showMessagesPanel();
+        }
+
+        function showMessagesPanel() {
+            document.getElementById('messages-panel').style.display = 'block';
+        }
+
+        window.toggleMessages = function () {
+            const panel = document.getElementById('messages');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        };
+
+        window.toggleChatInput = function () {
+            const panel = document.getElementById('chat-input-panel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            if (panel.style.display === 'block') {
+                document.getElementById('chat-input').focus();
+            }
+        };
+
+        // ========== SPEECH RECOGNITION ==========
+        let silenceTimer = null;
+        const SILENCE_TIMEOUT = 7000;
+
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                document.getElementById('mic-btn').style.display = 'none';
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;  // Single utterance mode for mobile
+            recognition.interimResults = true;
+            recognition.lang = 'tr-TR';
+
+            let finalTranscript = '';
+
+            recognition.onresult = (event) => {
+                if (silenceTimer) {
+                    clearTimeout(silenceTimer);
+                    silenceTimer = null;
+                }
+
+                let interimTranscript = '';
+
+                // Only process from resultIndex to avoid duplication
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const result = event.results[i];
+                    if (result.isFinal) {
+                        finalTranscript += result[0].transcript;
+                    } else {
+                        interimTranscript += result[0].transcript;
+                    }
+                }
+
+                // Display final + interim
+                document.getElementById('chat-input').value = finalTranscript + interimTranscript;
+                document.getElementById('chat-input-panel').style.display = 'block';
+
+                silenceTimer = setTimeout(() => {
+                    if (isListening) {
+                        recognition.stop();
+                    }
+                }, SILENCE_TIMEOUT);
+            };
+
+            recognition.onstart = () => {
+                finalTranscript = '';  // Reset on new recognition
+            };
+
+            recognition.onend = () => {
+                if (silenceTimer) {
+                    clearTimeout(silenceTimer);
+                    silenceTimer = null;
+                }
+
+                stopListening();
+
+                // Always send message when mic is released (push-to-talk)
+                const input = document.getElementById('chat-input');
+                if (input.value.trim()) {
+                    sendMessage();
+                }
+            };
+
+            recognition.onerror = (event) => {
+                if (silenceTimer) {
+                    clearTimeout(silenceTimer);
+                    silenceTimer = null;
+                }
+                stopListening();
+                if (event.error !== 'aborted' && event.error !== 'no-speech') {
+                    showToast('Ses tanıma hatası', 'error');
+                }
+            };
+        }
+
+        // Push-to-talk handlers
+        window.micDown = function () {
+            const micBtn = document.getElementById('mic-btn');
+            if (!recognition || isSpeaking || micBtn.disabled) return;
+            // Push-to-talk - start recording on press
+            startListening();
+        };
+
+        window.micUp = function () {
+            if (!recognition) return;
+            if (isListening) {
+                // Push-to-talk - stop recording on release
+                recognition.stop();
+            }
+        };
+
+        window.toggleMic = function () {
+            if (!recognition) return;
+
+            if (isListening) {
+                recognition.stop();
+            } else {
+                startListening();
+            }
+        };
+
+        function startListening() {
+            try {
+                recognition.start();
+                isListening = true;
+                // Change button to red
+                const btn = document.getElementById('mic-btn');
+                btn.classList.add('recording');
+                btn.classList.remove('from-primary', 'to-blue-500');
+                btn.classList.add('from-red-500', 'to-red-600');
+                document.getElementById('mic-icon').textContent = 'mic';
+                document.getElementById('mic-pulse-1').classList.remove('opacity-0');
+                document.getElementById('mic-pulse-2').classList.remove('opacity-0');
+                setStatus('Dinliyor...');
+            } catch (e) {
+                console.warn('Mic start error:', e);
+            }
+        }
+
+        function stopListening() {
+            isListening = false;
+            // Change button back to blue
+            const btn = document.getElementById('mic-btn');
+            btn.classList.remove('recording');
+            btn.classList.remove('from-red-500', 'to-red-600', 'from-gray-500', 'to-gray-600');
+            btn.classList.add('from-primary', 'to-blue-500');
+            document.getElementById('mic-pulse-1').classList.add('opacity-0');
+            document.getElementById('mic-pulse-2').classList.add('opacity-0');
+            setStatus('Hazır');
+        }
+
+        window.toggleContinuousMode = function () {
+            continuousMode = !continuousMode;
+            const btn = document.getElementById('continuous-btn');
+            if (continuousMode) {
+                btn.classList.remove('opacity-50');
+                btn.classList.add('bg-primary/50');
+                showToast('Sürekli Konuşma: AÇIK', 'success');
+            } else {
+                btn.classList.add('opacity-50');
+                btn.classList.remove('bg-primary/50');
+                showToast('Sürekli Konuşma: KAPALI', 'info');
+            }
+        };
+
+        // ========== UI HELPERS ==========
+        function setStatus(text) {
+            const statusEl = document.getElementById('status-text');
+            if (statusEl) statusEl.textContent = text;
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const msg = document.getElementById('toast-message');
+
+            const icons = {
+                success: 'check_circle',
+                error: 'error',
+                info: 'info'
+            };
+
+            icon.textContent = icons[type] || 'info';
+            icon.className = `material-symbols-outlined ${type === 'error' ? 'text-red-400' : type === 'success' ? 'text-green-400' : 'text-primary'}`;
+            msg.textContent = message;
+
+            toast.classList.remove('opacity-0', '-translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', '-translate-y-4');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 3000);
+        }
+    </script>
+</body>
+
+</html>

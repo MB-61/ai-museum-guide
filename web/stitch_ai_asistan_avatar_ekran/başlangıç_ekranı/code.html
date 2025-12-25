@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html class="dark" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Müze AI Asistanı - Başlangıç</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                        "surface-dark": "#1a2230",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "2xl": "2rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white h-screen w-full overflow-hidden flex flex-col selection:bg-primary selection:text-white">
+<div class="relative flex flex-col h-full w-full max-w-md mx-auto">
+<div class="relative w-full h-[55%] flex-shrink-0">
+<div class="absolute inset-0 bg-cover bg-center rounded-b-2xl shadow-2xl z-0" data-alt="Futuristic digital art blending classical sculpture with neon lights" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCAdxbI8KbjTnLvBEqsMEx06_tdzXEv0YTfRhiBkPac7veTbmMPauHCjntUTvZvzGaADoSO5FHdorMoq6QTdeoNFttIsg3pZtm--emBZY-dmk_GTerWASg1RQkWX1PoldqR3EbV8ZXoXmrHIEKykuabs4vvoIE9Jk_7A2JW-zwuk9jKyXuIkMsDI_AgCTD8pfx_6f7_RDKG7-oLHvNH8bt-Srsm7x4zNw-92pC44BLSeqjq85-TdSE4bMQZYIJIl3_oM5T9cW_37fw");'>
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent opacity-90 rounded-b-2xl"></div>
+<div class="absolute top-0 left-0 w-full p-6 pt-12 flex justify-center z-10">
+<div class="bg-black/30 backdrop-blur-md border border-white/10 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-lg shadow-black/20">
+<span class="material-symbols-outlined text-primary text-[20px]">smart_toy</span>
+<span class="text-xs font-bold tracking-widest uppercase text-white/90">KODE-X</span>
+</div>
+</div>
+</div>
+<div class="flex-1 flex flex-col justify-end pb-8 px-6 -mt-10 z-10">
+<div class="mb-8 text-center">
+<h1 class="text-4xl font-bold leading-tight tracking-tight mb-3 text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-400">
+                    Müze AI Asistanı
+                </h1>
+<p class="text-slate-400 text-base font-body font-normal leading-relaxed max-w-[280px] mx-auto">
+                    Kişisel yapay zeka rehberiniz ile tarihi yeniden keşfedin. Turunuza nasıl başlamak istersiniz?
+                </p>
+</div>
+<div class="flex flex-col gap-4 w-full">
+<button class="group relative flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-6 bg-primary hover:bg-blue-600 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/25">
+<div class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+<span class="material-symbols-outlined mr-3 text-white group-hover:scale-110 transition-transform">qr_code_scanner</span>
+<span class="text-white text-lg font-bold tracking-wide">QR Kodu Tara</span>
+</button>
+<button class="group flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-6 bg-surface-dark border border-white/5 hover:bg-white/5 active:scale-[0.98] transition-all duration-200">
+<span class="material-symbols-outlined mr-3 text-slate-300 group-hover:text-white transition-colors">person</span>
+<span class="text-slate-300 group-hover:text-white text-base font-semibold tracking-wide transition-colors">QR Olmadan Devam Et</span>
+</button>
+</div>
+<div class="mt-6 text-center">
+<p class="text-[10px] text-slate-600 font-body uppercase tracking-wider">
+                    Versiyon 2.0 • Gizlilik Politikası
+                </p>
+</div>
+</div>
+</div>
+
+</body></html>

@@ -1,12 +1,19 @@
 from pydantic import BaseModel
+from typing import List, Optional
+
+
+class Message(BaseModel):
+    """Single message in conversation history"""
+    role: str  # 'user' or 'assistant'
+    content: str
 
 
 class ChatRequest(BaseModel):
-    qr_id: str | None = None
+    qr_id: Optional[str] = None
     question: str
-    user_id: str | None = None  # Session ID for memory tracking
+    history: List[Message] = []  # Last N messages for context
 
 
 class ChatResponse(BaseModel):
     answer: str
-    sources: list[str] = []
+    sources: List[str] = []

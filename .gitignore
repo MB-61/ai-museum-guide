@@ -40,3 +40,6 @@ tempCodeRunnerFile.*
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Web config (API keys)
+web/config.js

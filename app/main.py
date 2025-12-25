@@ -1,10 +1,13 @@
+from dotenv import load_dotenv
+load_dotenv()  # Load .env variables
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
 
-from app.routers import qr, chat, voice, character, status
+from app.routers import qr, chat, voice, character
 
 
 def create_app() -> FastAPI:
@@ -33,27 +36,15 @@ def create_app() -> FastAPI:
     app.include_router(
         character.router, prefix="/api/v1", tags=["Character Agent"]
     )
-    app.include_router(status.router, prefix="/api/v1", tags=["Status"])
 
     # Serve frontend static files
     web_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "web")
-    data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
-    
     if os.path.exists(web_dir):
         app.mount("/static", StaticFiles(directory=web_dir), name="static")
         
-        # Serve QR code images
-        qr_dir = os.path.join(data_dir, "qr")
-        if os.path.exists(qr_dir):
-            app.mount("/static/qr", StaticFiles(directory=qr_dir), name="qr_codes")
-        
         @app.get("/")
         async def serve_frontend():
-            return FileResponse(os.path.join(web_dir, "index.html"))
-        
-        @app.get("/gallery")
-        async def serve_gallery():
-            return FileResponse(os.path.join(web_dir, "gallery.html"))
+            return FileResponse(os.path.join(web_dir, "avatar-guide-v2.html"))
 
     return app
 

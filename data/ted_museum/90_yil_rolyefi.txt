@@ -1,0 +1,11 @@
+90. Yıl Rölyefi (Dijital Replikası)
+
+Katalog Açıklaması
+
+Heykeltıraş Metin Yurdanur tarafından TED Ankara Koleji'nin 90. kuruluş yıldönümü anısına tasarlanan ve İncek Kampüsü girişinde yer alan anıtsal rölyeftir. 60 metre uzunluğundaki bu eser, "Biz Meşaleyiz, Biz Geleceğiz..." temasını işler.6 Rölyef, 5 ana parçadan oluşur ve her bir parça kurumun sanat, spor, bilim alanlarındaki başarılarını, Atatürk ilke ve devrimlerine bağlılığını ve çağdaş eğitim kadrosunu figüratif bir dille anlatır. Eser, bronz veya kompozit malzemenin ustalığıyla, kurumun tarihsel derinliğini modern sanatın diliyle birleştirir.
+
+Dijital müzede bu rölyef, yüksek çözünürlüklü panoramik bir görsel veya 3D model olarak sunulmalıdır. Eserin uzun yapısı nedeniyle, kullanıcıların sağa-sola kaydırarak (scroll) rölyefi baştan sona inceleyebileceği bir arayüz tasarlanmalıdır. Rölyef üzerindeki her bir figür (örneğin elinde meşale tutan genç, spor yapan öğrenci, müzik aleti çalan figür) interaktif hale getirilmeli; tıklandığında sanatçının o figürle neyi anlatmak istediği ve kurum tarihindeki karşılığı açıklanmalıdır.
+
+Küratoryal Analiz ve Tarihsel Bağlam
+
+Rölyefler, tarihin taşa veya metale kazınmış halleridir. Metin Yurdanur gibi önemli bir heykeltıraşın imzasını taşıması, esere sanatsal bir değer katar. Bu obje, TED'in sanatla kurduğu ilişkiyi ve kampüslerini birer açık hava müzesine dönüştürme vizyonunu gösterir. Dijital sergide, rölyefin yapım aşamalarına (çamur hali, kalıp alınması, döküm, montaj) ait videoların yer aldığı bir "Kamera Arkası" bölümü, sanatın üretim sürecine dair eğitici bir içerik sunacaktır.

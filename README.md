@@ -1,153 +1,116 @@
-# 🏛️ AI Museum Guide
+AI MUSEUM GUIDE - KOMUT LİSTESİ / COMMAND CHEAT SHEET
 
-Yapay zeka destekli interaktif müze rehberi. QR kod tarama, sesli sohbet ve kişiselleştirilmiş deneyim sunar.
+--------------------------------------------------------------------------------
+1. KURULUM / SETUP
+--------------------------------------------------------------------------------
 
-## ✨ Özellikler
+### Windows (PowerShell)
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+# Eğer requirements.txt yoksa:
+pip install fastapi uvicorn python-dotenv chromadb google-genai langchain langchain-google-genai sentence-transformers
 
-- **🔍 QR Kod Tarama**: Eserlerin QR kodlarını tarayarak bilgi alın
-- **💬 Akıllı Sohbet**: RAG (Retrieval-Augmented Generation) ile doğru bilgiler
-- **🎤 Sesli Giriş**: Web Speech API ile sesle soru sorun
-- **🔊 Sesli Yanıt**: Text-to-Speech ile yanıtları dinleyin
-- **🧠 Hafıza Sistemi**: İsminizi, ilgi alanlarınızı hatırlar
-- **🌐 Çoklu Dil Desteği**: Soruyu hangi dilde sorarsanız o dilde yanıt
+### macOS / Linux
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+# Manuel kurulum:
+pip install fastapi uvicorn python-dotenv chromadb google-genai langchain langchain-google-genai sentence-transformers
 
-## 🖼️ Mevcut Eserler (15 adet)
 
-| # | Eser | Sanatçı | QR Kodu |
-|---|------|---------|---------|
-| 1 | Mona Lisa | Leonardo da Vinci | qr_01 |
-| 2 | Yıldızlı Gece | Vincent van Gogh | qr_02 |
-| 3 | İnci Küpeli Kız | Johannes Vermeer | qr_03 |
-| 4 | Son Akşam Yemeği | Leonardo da Vinci | qr_04 |
-| 5 | Çığlık | Edvard Munch | qr_05 |
-| 6 | Guernica | Pablo Picasso | qr_06 |
-| 7 | Venüs'ün Doğuşu | Sandro Botticelli | qr_07 |
-| 8 | Adem'in Yaratılışı | Michelangelo | qr_08 |
-| 9 | Büyük Dalga | Katsushika Hokusai | qr_09 |
-| 10 | Gece Devriyesi | Rembrandt | qr_10 |
-| 11 | Belleğin Azmi | Salvador Dalí | qr_11 |
-| 12 | Öpücük | Gustav Klimt | qr_12 |
-| 13 | Su Zambakları | Claude Monet | qr_13 |
-| 14 | Avignon'lu Kızlar | Pablo Picasso | qr_14 |
-| 15 | Amerikan Gotiği | Grant Wood | qr_15 |
+--------------------------------------------------------------------------------
+2. SUNUCUYU BAŞLATMA / RUN SERVER
+--------------------------------------------------------------------------------
 
-## 🚀 Kurulum
+### Windows
+# Sadece kendi bilgisayarınız için (localhost):
+python -m uvicorn app.main:app --reload --port 8000
 
-### Gereksinimler
-- Python 3.11+
-- [uv](https://github.com/astral-sh/uv) paket yöneticisi
+# Aynı ağdaki diğer cihazlar (telefon vb.) erişebilsin diye:
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-### Adımlar
+taskkill /f /im python.exe 2>$null; Start-Sleep -Seconds 2; python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-```bash
-# Repo'yu klonla
-git clone https://github.com/MB-61/ai-museum-guide.git
-cd ai-museum-guide
+### macOS / Linux
+# Localhost:
+python3 -m uvicorn app.main:app --reload --port 8000
 
-# Bağımlılıkları yükle
-uv sync
+# Network access:
+python3 -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-# .env dosyasını oluştur
-cp .env.example .env
-# .env dosyasına Gemini API anahtarınızı ekleyin
-
-# Veritabanını oluştur (eser verilerini yükle)
-for exhibit in mona_lisa yildizli_gece inci_kupeli_kiz son_aksam_yemegi ciglik guernica venusun_dogusu ademin_yaratilisi buyuk_dalga gece_devriyesi bellegin_azmi opucuk su_zambaklari avignonlu_kizlar amerikan_gotigi; do
-  uv run -m ingestion.ingest --exhibit "$exhibit" --source "data/curated/${exhibit}.txt"
-done
-
-# Sunucuyu başlat
 uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
 
-### Ngrok ile Çalıştırma (Mobil Erişim)
+DOSYANIN AÇILACAĞI YER: http://localhost:8000/
 
-```bash
-ngrok http 8000
-```
+--------------------------------------------------------------------------------
+3. VERİ YÜKLEME (RAG) / INGESTION
+--------------------------------------------------------------------------------
+TED Müze verilerini ChromaDB'ye yüklemek için aşağıdaki komutları kullanın.
+Veriler `data/ted_museum/` klasöründen okunur (32 eser, ~112 chunk).
 
-## 📁 Proje Yapısı
+### Tüm Verileri Yükle (Önerilen)
 
-```
-ai-museum-guide/
-├── app/
-│   ├── main.py              # FastAPI uygulaması
-│   ├── routers/             # API endpoint'leri
-│   │   ├── chat.py          # Sohbet API
-│   │   ├── qr.py            # QR lookup API
-│   │   └── voice.py         # Ses API
-│   ├── services/            # İş mantığı
-│   │   ├── rag.py           # RAG pipeline
-│   │   ├── memory_service.py # Hafıza sistemi
-│   │   ├── llm.py           # LLM entegrasyonu
-│   │   └── key_rotation.py  # API key rotasyonu
-│   └── models/              # Pydantic modelleri
-├── data/
-│   ├── curated/             # Eser bilgileri (txt)
-│   ├── mappings/            # QR -> Eser eşleştirmesi
-│   └── qr/                  # QR kod görselleri
-├── web/
-│   └── index.html           # Frontend (tek sayfa)
-└── storage/
-    ├── chroma/              # ChromaDB veritabanı
-    └── memory/              # Kullanıcı hafızası (JSON)
-```
+# Windows (PowerShell)
+$env:PYTHONPATH = "."
+python ingestion/ingest_ted.py --clear    # Eski verileri sil ve yeniden yükle
 
-## 🔧 API Endpoints
+# macOS / Linux
+PYTHONPATH=. uv run python ingestion/ingest_ted.py --clear
 
-| Method | Endpoint | Açıklama |
-|--------|----------|----------|
-| POST | `/api/v1/chat` | Sohbet mesajı gönder |
-| POST | `/api/v1/qr/lookup` | QR koddan eser bilgisi al |
-| POST | `/api/v1/voice/transcribe` | Ses dosyasını metne çevir |
-| GET | `/` | Frontend sayfası |
+### Tek Eser Yükle (Opsiyonel)
 
-### Örnek İstek
+# macOS / Linux
+PYTHONPATH=. uv run python ingestion/ingest.py --exhibit eser_adi --source data/ted_museum/eser_adi.txt
 
-```bash
+
+--------------------------------------------------------------------------------
+4. VERİ SİLME & KONTROL / MANAGE DATA
+--------------------------------------------------------------------------------
+
+### Windows (PowerShell) - Silme & Kontrol Scripti
+# Aşağıdaki kodu bir python dosyasına kaydedip çalıştırabilirsiniz veya terminalde:
+python -c "from app.db.chroma import get_collection; col=get_collection(); col.delete(where={'exhibit_id': 'mona_lisa'}); print('Silindi.')"
+
+# Kontrol etme (Kaç doküman var?):
+python -c "from app.db.chroma import get_collection; print(len(get_collection().get()['ids']))"
+
+### macOS / Linux
+python3 -c "from app.db.chroma import get_collection; col=get_collection(); col.delete(where={'exhibit_id': 'mona_lisa'}); print('Deleted.')"
+
+
+--------------------------------------------------------------------------------
+5. TEST (CURL)
+--------------------------------------------------------------------------------
+
+### Windows (PowerShell)
+# Not: Windows'ta curl kullanımı bazen karışıktır, Invoke-RestMethod daha iyidir.
+
+# Basit Chat Testi:
+Invoke-RestMethod -Uri "http://localhost:8000/api/v1/chat" -Method Post -ContentType "application/json" -Body '{"question":"Mona Lisa kimin eseri?", "qr_id":"qr_01"}'
+
+# cURL kullanacaksanız (CMD/Git Bash):
+curl -X POST "http://localhost:8000/api/v1/chat" ^
+     -H "Content-Type: application/json" ^
+     -d "{\"question\": \"Mona Lisa kimin eseri?\", \"qr_id\": \"qr_01\"}"
+
+### macOS / Linux
 curl -X POST http://localhost:8000/api/v1/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "qr_id": "qr_01",
-    "question": "Bu tablo ne zaman yapıldı?",
-    "user_id": "visitor_123"
-  }'
-```
-
-## 🧠 Hafıza Sistemi
-
-Sistem, konuşmalardan önemli bilgileri otomatik olarak çıkarır ve saklar:
-
-```json
-{
-  "user_id": "visitor_123",
-  "name": "Ahmet",
-  "interests": ["Empresyonizm", "Van Gogh"],
-  "visited_exhibits": ["mona_lisa", "yildizli_gece"],
-  "preferences": {"language": "tr"}
-}
-```
-
-Sonraki konuşmalarda kişiselleştirilmiş yanıtlar verilir.
-
-## 🔑 Çevre Değişkenleri
-
-```env
-# Gemini API anahtarları (en az 1 gerekli)
-GOOGLE_API_KEY=your_primary_key
-GOOGLE_API_KEY_1=your_backup_key  # opsiyonel
-
-# Model
-LLM_MODEL=gemini-2.5-flash
-```
-
-## 📱 Mobil Kullanım
-
-1. Ngrok ile sunucuyu başlatın
-2. Telefonunuzun tarayıcısından ngrok URL'sine gidin
-3. QR kodları tarayın ve sesli sohbet edin
+     -H "Content-Type: application/json" \
+     -d '{"question": "Mona Lisa kimin eseri?", "qr_id": "qr_01"}'
 
 
+--------------------------------------------------------------------------------
+6. MOBİL TEST (NGROK)
+--------------------------------------------------------------------------------
+Telefondan HTTPS (Mikrofon izni) ile bağlanmak için.
 
-## 👤 Geliştirici
+### Windows & Mac (Aynı komut)
+# 1. Terminalde sunucuyu başlatın (Port 8000)
+# 2. Yeni terminalde:
+./ngrok http 8000
 
+NGROG ÖLDÜRME: taskkill /f /im ngrok.exe 2>$null
+
+# Size verilen https://....ngrok-free.dev adresini telefonda açın.
+# Örn: https://random-id.ngrok-free.dev/static/avatar-guide.html

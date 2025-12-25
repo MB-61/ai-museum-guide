@@ -8,7 +8,7 @@ router = APIRouter(prefix="/chat", tags=["Chat Agent"])
 @router.post("", response_model=ChatResponse)
 async def chat_with_guide(payload: ChatRequest) -> ChatResponse:
     return ask_museum_guide(
-        question=payload.question,
+        question=payload.question, 
         qr_id=payload.qr_id,
-        user_id=payload.user_id
+        history=payload.history
     )
