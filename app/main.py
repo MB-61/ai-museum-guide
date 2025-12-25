@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()  # Load .env variables
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -41,7 +44,7 @@ def create_app() -> FastAPI:
         
         @app.get("/")
         async def serve_frontend():
-            return FileResponse(os.path.join(web_dir, "index.html"))
+            return FileResponse(os.path.join(web_dir, "avatar-guide-v2.html"))
 
     return app
 
