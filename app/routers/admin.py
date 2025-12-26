@@ -3,9 +3,11 @@ import os
 import json
 import hashlib
 import secrets
+import base64
+import uuid
 from datetime import datetime, timedelta
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi import APIRouter, HTTPException, Depends, Header, UploadFile, File
 from pydantic import BaseModel
 
 from app.services import token_tracker, stats_service
@@ -461,4 +463,152 @@ async def run_rag_ingestion(data: IngestionRequest, authorized: bool = Depends(v
         raise HTTPException(status_code=500, detail=f"Ingestion failed: {str(e)}")
 
 
+# ========== EXHIBIT METADATA ==========
+METADATA_FILE = os.path.join(DATA_DIR, "exhibit_metadata.json")
 
+
+def load_metadata():
+    """Load exhibit metadata from file."""
+    try:
+        with open(METADATA_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except:
+        return {"categories": [], "exhibits": {}}
+
+
+def save_metadata(data):
+    """Save exhibit metadata to file."""
+    with open(METADATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+@router.get("/exhibit-categories")
+async def get_categories(authorized: bool = Depends(verify_token)):
+    """Get available exhibit categories."""
+    data = load_metadata()
+    return {"categories": data.get("categories", [])}
+
+
+@router.get("/exhibit-metadata")
+async def get_all_metadata(authorized: bool = Depends(verify_token)):
+    """Get all exhibit metadata."""
+    data = load_metadata()
+    return data
+
+
+@router.get("/exhibit-metadata/{qr_id}")
+async def get_exhibit_metadata(qr_id: str, authorized: bool = Depends(verify_token)):
+    """Get metadata for a specific exhibit (requires auth)."""
+    data = load_metadata()
+    exhibits = data.get("exhibits", {})
+    
+    if qr_id not in exhibits:
+        return {"qr_id": qr_id, "title": "", "category": "", "image": ""}
+    
+    return {"qr_id": qr_id, **exhibits[qr_id]}
+
+
+@router.get("/exhibit-image/{qr_id}")
+async def get_exhibit_image(qr_id: str):
+    """Get exhibit image URL (public, no auth required)."""
+    data = load_metadata()
+    exhibits = data.get("exhibits", {})
+    
+    if qr_id not in exhibits:
+        return {"qr_id": qr_id, "image": "", "title": ""}
+    
+    exhibit = exhibits[qr_id]
+    return {"qr_id": qr_id, "image": exhibit.get("image", ""), "title": exhibit.get("title", "")}
+
+
+class ExhibitMetadataUpdate(BaseModel):
+    title: Optional[str] = None
+    category: Optional[str] = None
+    image: Optional[str] = None
+
+
+@router.put("/exhibit-metadata/{qr_id}")
+async def update_exhibit_metadata(
+    qr_id: str, 
+    update: ExhibitMetadataUpdate,
+    authorized: bool = Depends(verify_token)
+):
+    """Update metadata for a specific exhibit."""
+    data = load_metadata()
+    
+    if "exhibits" not in data:
+        data["exhibits"] = {}
+    
+    if qr_id not in data["exhibits"]:
+        data["exhibits"][qr_id] = {"title": "", "category": "", "image": ""}
+    
+    # Update fields if provided
+    if update.title is not None:
+        data["exhibits"][qr_id]["title"] = update.title
+    if update.category is not None:
+        data["exhibits"][qr_id]["category"] = update.category
+    if update.image is not None:
+        data["exhibits"][qr_id]["image"] = update.image
+    
+    save_metadata(data)
+    
+    return {"status": "ok", "message": "Metadata updated", "data": data["exhibits"][qr_id]}
+
+
+# ========== IMAGE UPLOAD ==========
+STATIC_DIR = os.path.join(WEB_DIR, "static", "exhibits")
+
+
+class ImageUpload(BaseModel):
+    image_data: str  # Base64 encoded image
+    filename: Optional[str] = None
+
+
+@router.post("/upload-image")
+async def upload_image(data: ImageUpload, authorized: bool = Depends(verify_token)):
+    """Upload an image (Base64) and return the URL."""
+    try:
+        # Ensure directory exists
+        os.makedirs(STATIC_DIR, exist_ok=True)
+        
+        # Parse base64 data
+        image_data = data.image_data
+        if "," in image_data:
+            # Handle "data:image/png;base64,..." format
+            header, image_data = image_data.split(",", 1)
+            # Extract extension from header
+            if "png" in header:
+                ext = "png"
+            elif "jpeg" in header or "jpg" in header:
+                ext = "jpg"
+            elif "gif" in header:
+                ext = "gif"
+            elif "webp" in header:
+                ext = "webp"
+            else:
+                ext = "png"
+        else:
+            ext = "png"
+        
+        # Generate filename
+        if data.filename:
+            # Sanitize filename
+            safe_name = "".join(c for c in data.filename if c.isalnum() or c in "._-")
+            filename = f"{safe_name}.{ext}"
+        else:
+            filename = f"{uuid.uuid4().hex[:12]}.{ext}"
+        
+        # Decode and save
+        image_bytes = base64.b64decode(image_data)
+        filepath = os.path.join(STATIC_DIR, filename)
+        
+        with open(filepath, "wb") as f:
+            f.write(image_bytes)
+        
+        # Return URL path
+        url = f"/static/exhibits/{filename}"
+        
+        return {"status": "ok", "url": url, "filename": filename}
+    
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Upload failed: {str(e)}")

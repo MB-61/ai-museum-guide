@@ -327,14 +327,31 @@
     </div>
 
     <!-- ========== SCREEN 3: CHAT / AVATAR ========== -->
-    <div id="chat-screen" class="screen flex-col h-screen w-full relative">
-        <!-- Avatar Background - Shifted Up -->
-        <div class="absolute inset-0 z-0">
+    <div id="chat-screen" class="screen flex-col h-screen w-full relative overflow-visible">
+        <!-- Avatar + Exhibit Display Area -->
+        <div class="absolute inset-0 z-0 overflow-visible">
             <!-- Museum Background Image -->
             <div class="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                style="background-image: url('/static/museum-bg.png'); filter: blur(1px) brightness(0.6);"></div>
-            <div id="avatar-container" class="h-full w-full relative z-10"
-                style="transform: translateY(-5%) scale(1.25);"></div>
+                style="background-image: url('/static/museum-bg.png'); filter: blur(2px) brightness(0.4);"></div>
+
+            <!-- Exhibit Frame (Right Side - Behind Avatar) -->
+            <div id="exhibit-frame" class="absolute right-4 top-[12%] w-[50%] aspect-[3/4] z-5" style="display: none;">
+                <div
+                    class="relative w-full h-full bg-[#1a1a1a] rounded-2xl p-2 shadow-2xl border border-white/20 rotate-3">
+                    <div class="w-full h-full rounded-xl overflow-hidden bg-gray-900 border border-white/10">
+                        <img id="exhibit-image" alt="Eser" class="w-full h-full object-cover opacity-95" src=""
+                            onerror="this.style.display='none'">
+                        <div class="absolute inset-0 flex items-center justify-center" id="exhibit-placeholder">
+                            <span class="material-symbols-outlined text-5xl text-slate-600">image</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Avatar (Left Side - In Front) -->
+            <div id="avatar-container" class="absolute left-0 bottom-0 w-full h-[85%] z-10"
+                style="transform: translateY(5%);"></div>
+
             <!-- Gradient overlay -->
             <div
                 class="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-background-dark/80 pointer-events-none z-20">
@@ -737,18 +754,44 @@
         };
 
         // ========== CHAT SCREEN ==========
-        function initChatScreen() {
+        async function initChatScreen() {
             const modeIndicator = document.getElementById('mode-indicator');
             const exhibitBadge = document.getElementById('exhibit-badge');
             const exhibitName = document.getElementById('exhibit-name');
+            const exhibitFrame = document.getElementById('exhibit-frame');
+            const exhibitImage = document.getElementById('exhibit-image');
+            const exhibitPlaceholder = document.getElementById('exhibit-placeholder');
 
             if (qrMode && currentExhibitTitle) {
                 modeIndicator.textContent = 'Eser Modu';
                 exhibitBadge.style.display = 'flex';
                 exhibitName.textContent = currentExhibitTitle;
+
+                // Show exhibit frame and load image
+                exhibitFrame.style.display = 'block';
+
+                // Try to load exhibit image from metadata
+                try {
+                    const res = await fetch(`/api/v1/qr/exhibit-image/${currentQrId}`);
+                    if (res.ok) {
+                        const meta = await res.json();
+                        if (meta.image) {
+                            exhibitImage.src = meta.image;
+                            exhibitImage.style.display = 'block';
+                            exhibitPlaceholder.style.display = 'none';
+                        } else {
+                            exhibitImage.style.display = 'none';
+                            exhibitPlaceholder.style.display = 'flex';
+                        }
+                    }
+                } catch (e) {
+                    console.log('Could not load exhibit image');
+                    exhibitPlaceholder.style.display = 'flex';
+                }
             } else {
                 modeIndicator.textContent = 'Genel Mod';
                 exhibitBadge.style.display = 'none';
+                exhibitFrame.style.display = 'none';
             }
 
             initAvatar();
