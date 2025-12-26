@@ -40,8 +40,13 @@ def create_app() -> FastAPI:
 
     # Serve frontend static files
     web_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "web")
+    static_dir = os.path.join(web_dir, "static")
     if os.path.exists(web_dir):
-        app.mount("/static", StaticFiles(directory=web_dir), name="static")
+        # Mount static directory (for exhibits images etc)
+        if os.path.exists(static_dir):
+            app.mount("/static", StaticFiles(directory=static_dir), name="static")
+        # Mount web directory for other files
+        app.mount("/web", StaticFiles(directory=web_dir), name="web")
         
         @app.get("/")
         async def serve_frontend():

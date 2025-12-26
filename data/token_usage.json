@@ -1,14 +1,14 @@
 {
   "daily": {
     "2025-12-26": {
-      "input": 2379,
-      "output": 268,
-      "requests": 4
+      "input": 13993,
+      "output": 1206,
+      "requests": 17
     }
   },
   "total": {
-    "input": 2379,
-    "output": 268,
-    "requests": 4
+    "input": 13993,
+    "output": 1206,
+    "requests": 17
   }
 }

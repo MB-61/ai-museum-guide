@@ -173,6 +173,11 @@
                                 id="exhibit-count">0</span> adet)</p>
                     </div>
                     <div class="flex gap-2">
+                        <button onclick="printAllQRCodes()"
+                            class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                            <span class="material-symbols-outlined">print</span>
+                            Tüm QR Yazdır
+                        </button>
                         <button onclick="runRAGIngestion()" id="ingest-btn"
                             class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
                             <span class="material-symbols-outlined">sync</span>
@@ -187,12 +192,21 @@
                 </div>
 
                 <!-- Search -->
-                <div class="mb-4">
+                <div class="flex items-center gap-4 mb-4">
                     <input type="text" id="exhibit-search" onkeyup="filterExhibits()" placeholder="Eser ara..."
-                        class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500">
+                        class="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500">
+                    <label
+                        class="flex items-center gap-2 cursor-pointer bg-slate-700 px-4 py-3 rounded-lg hover:bg-slate-600 transition">
+                        <input type="checkbox" id="show-images-toggle" onchange="toggleImageView()"
+                            class="w-4 h-4 rounded">
+                        <span class="text-sm text-slate-300">Resimli Görünüm</span>
+                    </label>
                 </div>
 
-                <div class="bg-slate-800 rounded-xl overflow-hidden">
+                <!-- Card View (hidden by default) -->
+                <div id="exhibit-cards" class="hidden grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4"></div>
+
+                <div id="exhibit-table-container" class="bg-slate-800 rounded-xl overflow-hidden">
                     <table class="w-full">
                         <thead class="bg-slate-700">
                             <tr>
@@ -227,7 +241,7 @@
                             <div>
                                 <label class="block text-sm text-slate-400 mb-2">QR Kodu</label>
                                 <div class="flex gap-2">
-                                    <input type="text" id="modal-qr-id" placeholder="qr_01"
+                                    <input type="text" id="modal-qr-id" placeholder="qr_01" onblur="checkQRDuplicate()"
                                         class="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
                                     <button onclick="autoFillQR()" type="button"
                                         class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium"
@@ -235,12 +249,40 @@
                                         Oto
                                     </button>
                                 </div>
+                                <span id="qr-duplicate-warning" class="text-red-400 text-xs mt-1 hidden">⚠️ Bu QR kodu
+                                    zaten kullanılıyor!</span>
                             </div>
                         </div>
                         <div class="mb-4">
                             <label class="block text-sm text-slate-400 mb-2">Başlık (ilk satır olarak eklenir)</label>
                             <input type="text" id="modal-title-input" placeholder="Eser başlığı..."
                                 class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm text-slate-400 mb-2">Kategori</label>
+                                <select id="modal-category"
+                                    class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
+                                    <option value="">Seçiniz...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-slate-400 mb-2">Resim (sürükle-bırak veya
+                                    Ctrl+V)</label>
+                                <div id="image-drop-zone"
+                                    class="w-full h-32 bg-slate-700 border-2 border-dashed border-slate-500 rounded-lg flex items-center justify-center cursor-pointer hover:border-blue-500 transition relative overflow-hidden">
+                                    <div id="image-placeholder" class="text-center">
+                                        <span
+                                            class="material-symbols-outlined text-4xl text-slate-500">cloud_upload</span>
+                                        <p class="text-slate-500 text-sm mt-1">Resmi sürükle veya tıkla</p>
+                                    </div>
+                                    <img id="image-preview" class="absolute inset-0 w-full h-full object-cover hidden">
+                                    <input type="file" id="image-file-input" accept="image/*" class="hidden">
+                                    <input type="hidden" id="modal-image">
+                                </div>
+                                <button type="button" onclick="clearImagePreview()"
+                                    class="mt-1 text-xs text-red-400 hover:text-red-300">Resmi Kaldır</button>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm text-slate-400 mb-2">İçerik</label>
@@ -795,6 +837,83 @@
                 (e.qr_id && e.qr_id.toLowerCase().includes(search))
             );
             renderExhibitsTable(filtered);
+            if (document.getElementById('show-images-toggle').checked) {
+                renderExhibitCards(filtered);
+            }
+        }
+
+        let exhibitMetadataCache = null;
+
+        async function loadExhibitMetadata() {
+            if (exhibitMetadataCache) return exhibitMetadataCache;
+            try {
+                const data = await fetchWithAuth(`${API_BASE}/exhibit-metadata`);
+                exhibitMetadataCache = data?.exhibits || {};
+                return exhibitMetadataCache;
+            } catch {
+                return {};
+            }
+        }
+
+        async function toggleImageView() {
+            const isCard = document.getElementById('show-images-toggle').checked;
+            const tableContainer = document.getElementById('exhibit-table-container');
+            const cards = document.getElementById('exhibit-cards');
+
+            if (isCard) {
+                tableContainer.classList.add('hidden');
+                cards.classList.remove('hidden');
+                // Clear cache to get fresh data
+                exhibitMetadataCache = null;
+                await loadExhibitMetadata();
+                const search = document.getElementById('exhibit-search').value.toLowerCase();
+                const filtered = allExhibits.filter(e =>
+                    e.title.toLowerCase().includes(search) ||
+                    e.exhibit_id.toLowerCase().includes(search) ||
+                    (e.qr_id && e.qr_id.toLowerCase().includes(search))
+                );
+                renderExhibitCards(filtered);
+            } else {
+                tableContainer.classList.remove('hidden');
+                cards.classList.add('hidden');
+            }
+        }
+
+        async function renderExhibitCards(exhibits) {
+            const container = document.getElementById('exhibit-cards');
+            container.innerHTML = '';
+
+            const metadata = await loadExhibitMetadata();
+
+            exhibits.forEach(e => {
+                const meta = metadata[e.qr_id] || {};
+                const hasImage = meta.image && meta.image.trim() !== '';
+                const imageUrl = meta.image || '';
+                const category = meta.category || '';
+
+                const card = document.createElement('div');
+                card.className = 'bg-slate-800 rounded-xl overflow-hidden hover:ring-2 hover:ring-blue-500 transition cursor-pointer';
+                card.onclick = () => openExhibitEditor(e.exhibit_id);
+
+                // Image or placeholder
+                const imageContent = hasImage
+                    ? `<img src="${imageUrl}" alt="${e.title}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<div class=\\'flex items-center justify-center h-full\\'><span class=\\'material-symbols-outlined text-5xl text-slate-500\\'>help</span></div>'">`
+                    : `<div class="flex items-center justify-center h-full">
+                        <span class="material-symbols-outlined text-5xl text-slate-500">help</span>
+                       </div>`;
+
+                card.innerHTML = `
+                    <div class="aspect-video bg-slate-700 relative overflow-hidden">
+                        ${imageContent}
+                        ${e.qr_id ? `<span class="absolute top-2 left-2 bg-blue-600/90 text-xs px-2 py-1 rounded font-mono">${e.qr_id}</span>` : ''}
+                    </div>
+                    <div class="p-3">
+                        <h4 class="font-medium text-sm line-clamp-2 mb-1">${e.title}</h4>
+                        ${category ? `<span class="text-xs text-slate-400">${category}</span>` : ''}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
         }
 
         function getNextQRNumber() {
@@ -808,6 +927,135 @@
         function autoFillQR() {
             const nextNum = getNextQRNumber();
             document.getElementById('modal-qr-id').value = `qr_${String(nextNum).padStart(2, '0')}`;
+            checkQRDuplicate();
+        }
+
+        function checkQRDuplicate() {
+            const qrInput = document.getElementById('modal-qr-id');
+            const warning = document.getElementById('qr-duplicate-warning');
+            const qrId = qrInput.value.trim();
+
+            if (!qrId) {
+                warning.classList.add('hidden');
+                return false;
+            }
+
+            // Check if QR is already used (by another exhibit, not the current one being edited)
+            const isDuplicate = allExhibits.some(e =>
+                e.qr_id === qrId &&
+                e.exhibit_id !== currentEditExhibitId
+            );
+
+            if (isDuplicate) {
+                warning.classList.remove('hidden');
+                qrInput.classList.add('border-red-500');
+                return true;
+            } else {
+                warning.classList.add('hidden');
+                qrInput.classList.remove('border-red-500');
+                return false;
+            }
+        }
+
+        async function printAllQRCodes() {
+            // Get all exhibits with QR codes
+            const exhibitsWithQR = allExhibits.filter(e => e.qr_id);
+
+            if (exhibitsWithQR.length === 0) {
+                await customAlert('QR kodu atanmış eser bulunamadı!', 'error');
+                return;
+            }
+
+            // Create print window
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Tüm QR Kodları Yazdır</title>
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+                    <style>
+                        @page { size: A4; margin: 10mm; }
+                        * { box-sizing: border-box; margin: 0; padding: 0; }
+                        body { font-family: Arial, sans-serif; }
+                        .qr-grid { 
+                            display: grid; 
+                            grid-template-columns: repeat(3, 1fr); 
+                            gap: 15px; 
+                            padding: 10px;
+                        }
+                        .qr-item { 
+                            border: 2px solid #333; 
+                            border-radius: 8px; 
+                            padding: 15px; 
+                            text-align: center;
+                            page-break-inside: avoid;
+                        }
+                        .qr-code { 
+                            display: flex; 
+                            justify-content: center; 
+                            margin-bottom: 10px; 
+                        }
+                        .qr-title { 
+                            font-size: 11px; 
+                            font-weight: bold; 
+                            line-height: 1.3;
+                            min-height: 35px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        }
+                        .qr-id { 
+                            font-size: 10px; 
+                            color: #666; 
+                            margin-top: 5px; 
+                        }
+                        h1 { 
+                            text-align: center; 
+                            margin-bottom: 20px; 
+                            font-size: 18px;
+                        }
+                        @media print {
+                            .qr-item { break-inside: avoid; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>QR Kodlar</h1>
+                    <div class="qr-grid" id="qr-container"></div>
+                    <script>
+                        const exhibits = ${JSON.stringify(exhibitsWithQR.map(e => ({ qr_id: e.qr_id, title: e.title })))};
+                        const container = document.getElementById('qr-container');
+                        
+                        exhibits.forEach(e => {
+                            const item = document.createElement('div');
+                            item.className = 'qr-item';
+                            item.innerHTML = \`
+                                <div class="qr-code" id="qr-\${e.qr_id}"></div>
+                                <div class="qr-title">\${e.title}</div>
+                                <div class="qr-id">\${e.qr_id}</div>
+                            \`;
+                            container.appendChild(item);
+                            
+                            new QRCode(document.getElementById('qr-' + e.qr_id), {
+                                text: e.qr_id,
+                                width: 120,
+                                height: 120,
+                                colorDark: "#000000",
+                                colorLight: "#ffffff",
+                                correctLevel: QRCode.CorrectLevel.H
+                            });
+                        });
+                        
+                        // Auto print after QR codes are generated
+                        setTimeout(() => {
+                            window.print();
+                        }, 1000);
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         }
 
         let currentQRInstance = null;
@@ -849,25 +1097,217 @@
             const container = document.getElementById('qr-code-container');
             const canvas = container.querySelector('canvas');
             const qrId = document.getElementById('qr-modal-id').textContent;
+            const title = document.getElementById('qr-modal-title').textContent;
 
             if (canvas) {
+                // Create styled canvas with border and title
+                const padding = 20;
+                const borderWidth = 3;
+                const titleHeight = 50;
+                const idHeight = 25;
+                const totalWidth = canvas.width + (padding * 2) + (borderWidth * 2);
+                const totalHeight = canvas.height + titleHeight + idHeight + (padding * 2) + (borderWidth * 2);
+
+                const styledCanvas = document.createElement('canvas');
+                styledCanvas.width = totalWidth;
+                styledCanvas.height = totalHeight;
+                const ctx = styledCanvas.getContext('2d');
+
+                // White background
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, totalWidth, totalHeight);
+
+                // Border
+                ctx.strokeStyle = '#333333';
+                ctx.lineWidth = borderWidth;
+                ctx.roundRect(borderWidth / 2, borderWidth / 2, totalWidth - borderWidth, totalHeight - borderWidth, 10);
+                ctx.stroke();
+
+                // QR Code
+                const qrX = (totalWidth - canvas.width) / 2;
+                const qrY = padding + borderWidth;
+                ctx.drawImage(canvas, qrX, qrY);
+
+                // Title
+                ctx.fillStyle = '#000000';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                const titleY = qrY + canvas.height + 25;
+
+                // Word wrap title if too long
+                const maxWidth = totalWidth - 20;
+                const words = title.split(' ');
+                let line = '';
+                let lineY = titleY;
+
+                for (let word of words) {
+                    const testLine = line + word + ' ';
+                    const metrics = ctx.measureText(testLine);
+                    if (metrics.width > maxWidth && line !== '') {
+                        ctx.fillText(line.trim(), totalWidth / 2, lineY);
+                        line = word + ' ';
+                        lineY += 16;
+                    } else {
+                        line = testLine;
+                    }
+                }
+                ctx.fillText(line.trim(), totalWidth / 2, lineY);
+
+                // QR ID
+                ctx.fillStyle = '#666666';
+                ctx.font = '12px Arial';
+                ctx.fillText(qrId, totalWidth / 2, totalHeight - padding);
+
+                // Download
                 const link = document.createElement('a');
                 link.download = `${qrId}.png`;
-                link.href = canvas.toDataURL('image/png');
+                link.href = styledCanvas.toDataURL('image/png');
                 link.click();
-            } else {
-                // Fallback for img element
-                const img = container.querySelector('img');
-                if (img) {
-                    const link = document.createElement('a');
-                    link.download = `${qrId}.png`;
-                    link.href = img.src;
-                    link.click();
-                }
             }
         }
 
-        function showCreateExhibitModal() {
+        // Load categories for dropdown
+        let exhibitCategories = [];
+
+        async function loadCategories() {
+            try {
+                const data = await fetchWithAuth(`${API_BASE}/exhibit-categories`);
+                if (data && data.categories) {
+                    exhibitCategories = data.categories;
+                    const select = document.getElementById('modal-category');
+                    select.innerHTML = '<option value="">Seçiniz...</option>';
+                    exhibitCategories.forEach(cat => {
+                        select.innerHTML += `<option value="${cat}">${cat}</option>`;
+                    });
+                }
+            } catch (e) {
+                console.error('Failed to load categories:', e);
+            }
+        }
+
+        // Load categories on page load
+        loadCategories();
+
+        // ========== IMAGE UPLOAD HANDLERS ==========
+        let pendingImageBase64 = null;
+
+        function setupImageDropZone() {
+            const dropZone = document.getElementById('image-drop-zone');
+            const fileInput = document.getElementById('image-file-input');
+            const preview = document.getElementById('image-preview');
+            const placeholder = document.getElementById('image-placeholder');
+
+            if (!dropZone) return;
+
+            // Click to select file
+            dropZone.addEventListener('click', () => fileInput.click());
+
+            // File input change
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    handleImageFile(e.target.files[0]);
+                }
+            });
+
+            // Drag and drop
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('border-blue-500');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('border-blue-500');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('border-blue-500');
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    handleImageFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            // Paste (Ctrl+V) - listen on window
+            window.addEventListener('paste', (e) => {
+                const modal = document.getElementById('exhibit-modal');
+                if (!modal || !modal.classList.contains('flex')) return; // Only when modal is open
+
+                const items = e.clipboardData?.items || e.clipboardData?.files;
+                if (!items) return;
+
+                for (let i = 0; i < items.length; i++) {
+                    const item = items[i];
+                    if (item.type && item.type.startsWith('image/')) {
+                        e.preventDefault();
+                        const file = item.getAsFile ? item.getAsFile() : item;
+                        if (file) {
+                            handleImageFile(file);
+                            console.log('Image pasted:', file.name || 'clipboard image');
+                        }
+                        break;
+                    }
+                }
+            });
+        }
+
+        function handleImageFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                pendingImageBase64 = e.target.result;
+                showImagePreview(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showImagePreview(src) {
+            const preview = document.getElementById('image-preview');
+            const placeholder = document.getElementById('image-placeholder');
+            preview.src = src;
+            preview.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+        }
+
+        function clearImagePreview() {
+            const preview = document.getElementById('image-preview');
+            const placeholder = document.getElementById('image-placeholder');
+            preview.src = '';
+            preview.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            document.getElementById('modal-image').value = '';
+            pendingImageBase64 = null;
+        }
+
+        async function uploadPendingImage(qrId) {
+            if (!pendingImageBase64) return null;
+
+            try {
+                const res = await fetch(`${API_BASE}/upload-image`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        image_data: pendingImageBase64,
+                        filename: qrId
+                    })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    return data.url;
+                }
+            } catch (e) {
+                console.error('Image upload failed:', e);
+            }
+            return null;
+        }
+
+        // Setup on page load
+        setTimeout(setupImageDropZone, 500);
+
+
+        async function showCreateExhibitModal() {
             isCreatingNew = true;
             currentEditExhibitId = null;
             document.getElementById('modal-title').textContent = 'Yeni Eser Oluştur';
@@ -875,7 +1315,10 @@
             document.getElementById('modal-exhibit-id').disabled = false;
             document.getElementById('modal-qr-id').value = '';
             document.getElementById('modal-title-input').value = '';
+            document.getElementById('modal-category').value = '';
             document.getElementById('modal-content').value = '';
+            clearImagePreview();
+            await loadCategories();
             document.getElementById('exhibit-modal').classList.remove('hidden');
             document.getElementById('exhibit-modal').classList.add('flex');
         }
@@ -899,6 +1342,27 @@
             document.getElementById('modal-qr-id').value = data.qr_id || '';
             document.getElementById('modal-title-input').value = title;
             document.getElementById('modal-content').value = restContent;
+
+            // Load metadata (category, image)
+            await loadCategories();
+            clearImagePreview(); // Reset first
+            pendingImageBase64 = null;
+
+            const qrId = data.qr_id;
+            if (qrId) {
+                const meta = await fetchWithAuth(`${API_BASE}/exhibit-metadata/${qrId}`);
+                if (meta) {
+                    document.getElementById('modal-category').value = meta.category || '';
+                    // Show existing image if available
+                    if (meta.image) {
+                        document.getElementById('modal-image').value = meta.image;
+                        showImagePreview(meta.image);
+                    }
+                }
+            } else {
+                document.getElementById('modal-category').value = '';
+            }
+
             document.getElementById('exhibit-modal').classList.remove('hidden');
             document.getElementById('exhibit-modal').classList.add('flex');
         }
@@ -914,14 +1378,32 @@
             const exhibitId = document.getElementById('modal-exhibit-id').value.trim();
             const qrId = document.getElementById('modal-qr-id').value.trim();
             const titleInput = document.getElementById('modal-title-input').value.trim();
+            const category = document.getElementById('modal-category').value;
+            const image = document.getElementById('modal-image').value.trim();
             const contentBody = document.getElementById('modal-content').value;
 
             // Combine title and content
             const fullContent = titleInput ? `${titleInput}\n\n${contentBody}` : contentBody;
 
             if (!exhibitId) {
-                alert('Dosya ID gerekli!');
+                await customAlert('Dosya ID gerekli!', 'error');
                 return;
+            }
+
+            // Check for duplicate QR before saving
+            if (qrId) {
+                const isDuplicate = allExhibits.some(e =>
+                    e.qr_id === qrId &&
+                    e.exhibit_id !== currentEditExhibitId
+                );
+
+                if (isDuplicate) {
+                    const duplicateExhibit = allExhibits.find(e => e.qr_id === qrId && e.exhibit_id !== currentEditExhibitId);
+                    await customAlert(`Bu QR kodu "${duplicateExhibit?.title || qrId}" eserinde zaten kullanılıyor!\n\nLütfen farklı bir QR kodu seçin.`, 'error');
+                    // Don't close modal, let user fix the issue
+                    document.getElementById('modal-qr-id').focus();
+                    return;
+                }
             }
 
             let res;
@@ -946,13 +1428,40 @@
             }
 
             if (res.ok) {
+                // Upload pending image if exists
+                let finalImageUrl = document.getElementById('modal-image').value.trim();
+                if (pendingImageBase64 && qrId) {
+                    const uploadedUrl = await uploadPendingImage(qrId);
+                    if (uploadedUrl) {
+                        finalImageUrl = uploadedUrl;
+                    }
+                }
+
+                // Save metadata if qrId is set
+                if (qrId) {
+                    await fetch(`${API_BASE}/exhibit-metadata/${qrId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({ title: titleInput, category: category, image: finalImageUrl })
+                    });
+                }
+
                 const data = await res.json();
-                alert(data.message || 'Kaydedildi!');
+                await customAlert(data.message || 'Kaydedildi!', 'success');
                 closeExhibitModal();
+                // Clear metadata cache so changes reflect immediately
+                exhibitMetadataCache = null;
                 loadExhibits();
+                // Refresh card view if visible
+                if (document.getElementById('show-images-toggle').checked) {
+                    toggleImageView();
+                }
             } else {
                 const err = await res.json();
-                alert('Hata: ' + (err.detail || 'Bilinmeyen hata'));
+                await customAlert('Hata: ' + (err.detail || 'Bilinmeyen hata'), 'error');
             }
         }
 
