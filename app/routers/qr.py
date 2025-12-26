@@ -1,7 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
+import logging
 
 from app.models.qr_models import QRLookupRequest, QRLookupResponse
 from app.services.qr_service import lookup_exhibit
+from app.services import stats_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/qr",
@@ -10,5 +14,19 @@ router = APIRouter(
 
 
 @router.post("/lookup", response_model=QRLookupResponse)
-async def qr_lookup(payload: QRLookupRequest) -> QRLookupResponse:
-    return lookup_exhibit(payload.qr_id)
+async def qr_lookup(payload: QRLookupRequest, request: Request) -> QRLookupResponse:
+    result = lookup_exhibit(payload.qr_id)
+    
+    # Get client IP
+    client_ip = request.client.host if request.client else None
+    
+    # Track QR scan stats
+    try:
+        stats_service.track_qr_scan(payload.qr_id, result.title or "")
+        stats_service.track_session(client_ip)
+        logger.info(f"QR scan tracked: {payload.qr_id}, IP: {client_ip}")
+    except Exception as e:
+        logger.error(f"Stats tracking error: {e}")
+    
+    return result
+

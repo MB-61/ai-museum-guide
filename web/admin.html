@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - AI Müze Rehberi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .tab-btn.active {
+            background: #3b82f6;
+            color: white;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-900 text-white min-h-screen">
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl p-8 w-full max-w-md shadow-2xl">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-blue-400">🏛️ Admin Panel</h1>
+                <p class="text-slate-400 mt-2">AI Müze Rehberi Yönetim</p>
+            </div>
+            <form onsubmit="login(event)">
+                <div class="mb-4">
+                    <label class="block text-sm text-slate-400 mb-2">Kullanıcı Adı</label>
+                    <input type="text" id="username"
+                        class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500"
+                        placeholder="admin">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm text-slate-400 mb-2">Şifre</label>
+                    <input type="password" id="password"
+                        class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500"
+                        placeholder="••••">
+                </div>
+                <button type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition">
+                    Giriş Yap
+                </button>
+                <p id="login-error" class="text-red-400 text-sm mt-4 text-center hidden">Hatalı kullanıcı adı veya şifre
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="admin-screen" class="hidden">
+        <!-- Header -->
+        <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">🏛️</span>
+                <h1 class="text-xl font-bold">Admin Panel</h1>
+            </div>
+            <button onclick="logout()" class="text-slate-400 hover:text-white flex items-center gap-2">
+                <span class="material-symbols-outlined">logout</span>
+                Çıkış
+            </button>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="bg-slate-800 px-6 py-3 flex gap-2 overflow-x-auto">
+            <button onclick="showTab('dashboard')"
+                class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium transition" data-tab="dashboard">📊
+                Dashboard</button>
+            <button onclick="showTab('exhibits')"
+                class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 hover:bg-slate-600 transition"
+                data-tab="exhibits">🖼️ Eserler</button>
+            <button onclick="showTab('greetings')"
+                class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 hover:bg-slate-600 transition"
+                data-tab="greetings">💬 Karşılamalar</button>
+            <button onclick="showTab('tokens')"
+                class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 hover:bg-slate-600 transition"
+                data-tab="tokens">🪙 Token Kullanımı</button>
+            <button onclick="showTab('stats')"
+                class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 hover:bg-slate-600 transition"
+                data-tab="stats">📈 İstatistikler</button>
+            <button onclick="showTab('api')"
+                class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 hover:bg-slate-600 transition"
+                data-tab="api">🔑 API Anahtarları</button>
+        </nav>
+
+        <!-- Content Area -->
+        <main class="p-6">
+            <!-- Dashboard Tab -->
+            <div id="tab-dashboard" class="tab-content">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold">Dashboard</h2>
+                    <div class="flex items-center gap-3">
+                        <label class="flex items-center gap-2 text-sm text-slate-400">
+                            <input type="checkbox" id="auto-refresh" checked class="rounded">
+                            <span>Oto yenile (<span id="countdown-timer">10</span>s)</span>
+                        </label>
+                        <button onclick="refreshAllData()"
+                            class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-medium transition flex items-center gap-2">
+                            <span class="material-symbols-outlined" id="refresh-icon">refresh</span>
+                            Yenile
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-slate-800 rounded-xl p-6">
+                        <p class="text-slate-400 text-sm">Bugün QR Tarama</p>
+                        <p id="stat-scans" class="text-3xl font-bold text-blue-400 mt-2">-</p>
+                    </div>
+                    <div class="bg-slate-800 rounded-xl p-6">
+                        <p class="text-slate-400 text-sm">Bugün Sohbet</p>
+                        <p id="stat-chats" class="text-3xl font-bold text-green-400 mt-2">-</p>
+                    </div>
+                    <div class="bg-slate-800 rounded-xl p-6">
+                        <p class="text-slate-400 text-sm">Bugün Token</p>
+                        <p id="stat-tokens" class="text-3xl font-bold text-purple-400 mt-2">-</p>
+                    </div>
+                    <div class="bg-slate-800 rounded-xl p-6">
+                        <p class="text-slate-400 text-sm">Bugün Maliyet</p>
+                        <p id="stat-cost" class="text-3xl font-bold text-yellow-400 mt-2">-</p>
+                    </div>
+                </div>
+                <div class="bg-slate-800 rounded-xl p-6">
+                    <h3 class="font-semibold mb-4">Toplam İstatistikler</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                        <div>
+                            <p class="text-slate-400 text-sm">Benzersiz IP</p>
+                            <p id="stat-sessions" class="text-xl font-bold">-</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-sm">Toplam Token</p>
+                            <p id="stat-total-tokens" class="text-xl font-bold">-</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-sm">API Anahtarı</p>
+                            <p id="stat-keys" class="text-xl font-bold">-</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-sm">Toplam Maliyet</p>
+                            <p id="stat-total-cost" class="text-xl font-bold">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing Info -->
+                <div class="bg-slate-800/50 rounded-lg px-4 py-2 text-sm text-slate-400 flex items-center gap-4">
+                    <span class="font-medium text-slate-300">💰 Gemini 2.5 Flash:</span>
+                    <span>Input: $0.15/1M token</span>
+                    <span>Output: $0.60/1M token</span>
+                </div>
+
+                <!-- Unique IPs -->
+                <div class="bg-slate-800 rounded-xl p-6 mt-4">
+                    <h3 class="font-semibold mb-3">🌐 Benzersiz IP Adresleri</h3>
+                    <div id="ip-list" class="flex flex-wrap gap-2 text-sm">
+                        <span class="text-slate-400">Yükleniyor...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exhibits Tab -->
+            <div id="tab-exhibits" class="tab-content hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold">RAG Eser Yönetimi</h2>
+                        <p class="text-slate-400 text-sm mt-1">ted_museum klasöründeki eserler (<span
+                                id="exhibit-count">0</span> adet)</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="runRAGIngestion()" id="ingest-btn"
+                            class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                            <span class="material-symbols-outlined">sync</span>
+                            RAG Güncelle
+                        </button>
+                        <button onclick="showCreateExhibitModal()"
+                            class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-medium transition flex items-center gap-2">
+                            <span class="material-symbols-outlined">add</span>
+                            Yeni Eser
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search -->
+                <div class="mb-4">
+                    <input type="text" id="exhibit-search" onkeyup="filterExhibits()" placeholder="Eser ara..."
+                        class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div class="bg-slate-800 rounded-xl overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-slate-700">
+                            <tr>
+                                <th class="text-left px-4 py-3 text-sm font-medium text-slate-300">QR</th>
+                                <th class="text-left px-4 py-3 text-sm font-medium text-slate-300">Başlık</th>
+                                <th class="text-left px-4 py-3 text-sm font-medium text-slate-300">Dosya ID</th>
+                                <th class="text-left px-4 py-3 text-sm font-medium text-slate-300">Boyut</th>
+                                <th class="text-right px-4 py-3 text-sm font-medium text-slate-300">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rag-exhibits-list" class="divide-y divide-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Exhibit Editor Modal -->
+            <div id="exhibit-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4">
+                <div class="bg-slate-800 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+                    <div class="flex items-center justify-between p-4 border-b border-slate-700">
+                        <h3 id="modal-title" class="text-xl font-bold">Eser Düzenle</h3>
+                        <button onclick="closeExhibitModal()" class="text-slate-400 hover:text-white">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+                    <div class="p-4 flex-1 overflow-y-auto">
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm text-slate-400 mb-2">Dosya ID (değiştirilemez)</label>
+                                <input type="text" id="modal-exhibit-id" disabled
+                                    class="w-full bg-slate-600 border border-slate-500 rounded-lg px-4 py-2 text-slate-300">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-slate-400 mb-2">QR Kodu</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="modal-qr-id" placeholder="qr_01"
+                                        class="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
+                                    <button onclick="autoFillQR()" type="button"
+                                        class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium"
+                                        title="Sonraki QR">
+                                        Oto
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm text-slate-400 mb-2">Başlık (ilk satır olarak eklenir)</label>
+                            <input type="text" id="modal-title-input" placeholder="Eser başlığı..."
+                                class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-slate-400 mb-2">İçerik</label>
+                            <textarea id="modal-content" rows="18"
+                                class="w-full bg-slate-700 border border-slate-600 rounded-lg p-4 text-sm focus:outline-none focus:border-blue-500 font-mono"
+                                placeholder="Eser içeriğini yazın..."></textarea>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-4 border-t border-slate-700">
+                        <p class="text-slate-400 text-sm">⚠️ Kayıt sonrası RAG ingestion gerekir</p>
+                        <div class="flex gap-2">
+                            <button onclick="closeExhibitModal()"
+                                class="px-6 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition">İptal</button>
+                            <button onclick="saveExhibitModal()"
+                                class="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 font-medium transition">Kaydet</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Code Modal -->
+            <div id="qr-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4">
+                <div class="bg-slate-800 rounded-2xl p-6 max-w-sm w-full text-center">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold">QR Kodu</h3>
+                        <button onclick="closeQRModal()" class="text-slate-400 hover:text-white">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+                    <p id="qr-modal-title" class="text-slate-400 text-sm mb-4"></p>
+                    <div id="qr-code-container" class="bg-white p-4 rounded-xl inline-block mb-4"></div>
+                    <p id="qr-modal-id" class="text-blue-400 font-mono text-lg mb-4"></p>
+                    <div class="flex gap-2 justify-center">
+                        <button onclick="downloadQRCode()"
+                            class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg font-medium transition flex items-center gap-2">
+                            <span class="material-symbols-outlined">download</span>
+                            PNG İndir
+                        </button>
+                        <button onclick="closeQRModal()"
+                            class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition">
+                            Kapat
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Greetings Tab -->
+            <div id="tab-greetings" class="tab-content hidden">
+                <h2 class="text-2xl font-bold mb-6">Karşılama Cümleleri</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-slate-800 rounded-xl p-6">
+                        <h3 class="font-semibold mb-4">🎯 QR Modlu Karşılamalar</h3>
+                        <p class="text-slate-400 text-sm mb-3">Her satır bir karşılama. {exhibit} yerine eser adı gelir.
+                        </p>
+                        <textarea id="qr-greetings"
+                            class="w-full h-64 bg-slate-700 border border-slate-600 rounded-lg p-4 text-sm focus:outline-none focus:border-blue-500"
+                            placeholder="Yükleniyor..."></textarea>
+                        <button onclick="saveQrGreetings()"
+                            class="mt-4 bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-medium transition">Kaydet</button>
+                    </div>
+                    <div class="bg-slate-800 rounded-xl p-6">
+                        <h3 class="font-semibold mb-4">🌐 Genel Mod Karşılamalar</h3>
+                        <p class="text-slate-400 text-sm mb-3">QR olmadan girişte kullanılır.</p>
+                        <textarea id="general-greetings"
+                            class="w-full h-64 bg-slate-700 border border-slate-600 rounded-lg p-4 text-sm focus:outline-none focus:border-blue-500"
+                            placeholder="Yükleniyor..."></textarea>
+                        <button onclick="saveGeneralGreetings()"
+                            class="mt-4 bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-medium transition">Kaydet</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tokens Tab -->
+            <div id="tab-tokens" class="tab-content hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold">Token Kullanımı</h2>
+                    <button onclick="loadTokens()"
+                        class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-medium transition flex items-center gap-2">
+                        <span class="material-symbols-outlined">refresh</span>
+                        Yenile
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-slate-800 rounded-xl p-6">
+                        <p class="text-slate-400 text-sm">Toplam Input Token</p>
+                        <p id="token-input" class="text-2xl font-bold text-blue-400 mt-2">-</p>
+                    </div>
+                    <div class="bg-slate-800 rounded-xl p-6">
+                        <p class="text-slate-400 text-sm">Toplam Output Token</p>
+                        <p id="token-output" class="text-2xl font-bold text-green-400 mt-2">-</p>
+                    </div>
+                    <div class="bg-slate-800 rounded-xl p-6">
+                        <p class="text-slate-400 text-sm">Toplam İstek</p>
+                        <p id="token-requests" class="text-2xl font-bold text-purple-400 mt-2">-</p>
+                    </div>
+                </div>
+                <div class="bg-slate-800 rounded-xl p-6">
+                    <h3 class="font-semibold mb-4">Günlük Kullanım</h3>
+                    <div id="token-daily" class="space-y-2"></div>
+                </div>
+            </div>
+
+            <!-- Stats Tab -->
+            <div id="tab-stats" class="tab-content hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold">İstatistikler</h2>
+                    <button onclick="loadStats()"
+                        class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-medium transition flex items-center gap-2">
+                        <span class="material-symbols-outlined">refresh</span>
+                        Yenile
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-slate-800 rounded-xl p-6">
+                        <h3 class="font-semibold mb-4">🔥 En Çok Taranan QR Kodlar</h3>
+                        <div id="top-qr" class="space-y-2"></div>
+                    </div>
+                    <div class="bg-slate-800 rounded-xl p-6">
+                        <h3 class="font-semibold mb-4">💬 Son Sorular</h3>
+                        <div id="recent-questions" class="space-y-2 max-h-64 overflow-y-auto"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Tab -->
+            <div id="tab-api" class="tab-content hidden">
+                <h2 class="text-2xl font-bold mb-6">API Anahtarları</h2>
+                <div class="bg-slate-800 rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold">Gemini API Anahtarları</h3>
+                        <span id="current-key" class="text-sm text-slate-400">Aktif: -</span>
+                    </div>
+                    <div id="api-keys-list" class="space-y-2"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center">
+        <div class="bg-slate-800 rounded-2xl p-8 text-center max-w-sm">
+            <div class="animate-spin w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4">
+            </div>
+            <h3 class="text-xl font-bold mb-2">RAG Güncelleniyor</h3>
+            <p class="text-slate-400">Lütfen bekleyin, bu işlem birkaç dakika sürebilir...</p>
+        </div>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl p-6 max-w-sm w-full text-center">
+            <div class="w-14 h-14 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="material-symbols-outlined text-blue-400 text-3xl">help</span>
+            </div>
+            <h3 id="confirm-title" class="text-xl font-bold mb-2">Onay</h3>
+            <p id="confirm-message" class="text-slate-400 mb-6"></p>
+            <div class="flex gap-3 justify-center">
+                <button id="confirm-cancel"
+                    class="px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-medium transition">İptal</button>
+                <button id="confirm-ok"
+                    class="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition">Tamam</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div id="alert-modal" class="fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl p-6 max-w-sm w-full text-center">
+            <div id="alert-icon-container" class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span id="alert-icon" class="material-symbols-outlined text-3xl"></span>
+            </div>
+            <h3 id="alert-title" class="text-xl font-bold mb-2">Bilgi</h3>
+            <p id="alert-message" class="text-slate-400 mb-6"></p>
+            <button id="alert-ok"
+                class="px-8 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition">Tamam</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1/admin';
+        let authToken = localStorage.getItem('adminToken');
+
+        // Check if already logged in
+        if (authToken) {
+            fetchDashboard().then(ok => {
+                if (ok) showAdminScreen();
+            });
+        }
+
+        // Custom Confirm Dialog
+        function customConfirm(message, title = 'Onay') {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirm-modal');
+                document.getElementById('confirm-title').textContent = title;
+                document.getElementById('confirm-message').textContent = message;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+
+                const okBtn = document.getElementById('confirm-ok');
+                const cancelBtn = document.getElementById('confirm-cancel');
+
+                const cleanup = () => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    okBtn.onclick = null;
+                    cancelBtn.onclick = null;
+                };
+
+                okBtn.onclick = () => { cleanup(); resolve(true); };
+                cancelBtn.onclick = () => { cleanup(); resolve(false); };
+            });
+        }
+
+        // Custom Alert Dialog
+        function customAlert(message, type = 'info') {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('alert-modal');
+                const iconContainer = document.getElementById('alert-icon-container');
+                const icon = document.getElementById('alert-icon');
+                const title = document.getElementById('alert-title');
+
+                // Set icon and colors based on type
+                if (type === 'success') {
+                    iconContainer.className = 'w-14 h-14 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4';
+                    icon.className = 'material-symbols-outlined text-green-400 text-3xl';
+                    icon.textContent = 'check_circle';
+                    title.textContent = 'Başarılı';
+                } else if (type === 'error') {
+                    iconContainer.className = 'w-14 h-14 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4';
+                    icon.className = 'material-symbols-outlined text-red-400 text-3xl';
+                    icon.textContent = 'error';
+                    title.textContent = 'Hata';
+                } else {
+                    iconContainer.className = 'w-14 h-14 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4';
+                    icon.className = 'material-symbols-outlined text-blue-400 text-3xl';
+                    icon.textContent = 'info';
+                    title.textContent = 'Bilgi';
+                }
+
+                document.getElementById('alert-message').textContent = message;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+
+                document.getElementById('alert-ok').onclick = () => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    resolve();
+                };
+            });
+        }
+
+        async function login(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const res = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    authToken = data.token;
+                    localStorage.setItem('adminToken', authToken);
+                    showAdminScreen();
+                } else {
+                    document.getElementById('login-error').classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('adminToken');
+            authToken = null;
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('admin-screen').classList.add('hidden');
+        }
+
+        function showAdminScreen() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('admin-screen').classList.remove('hidden');
+            loadDashboard();
+            loadGreetings();
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('active', 'bg-blue-500');
+                b.classList.add('bg-slate-700');
+            });
+
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            document.querySelector(`[data-tab="${tabName}"]`).classList.remove('bg-slate-700');
+
+            if (tabName === 'dashboard') loadDashboard();
+            if (tabName === 'tokens') loadTokens();
+            if (tabName === 'stats') loadStats();
+            if (tabName === 'api') loadApiKeys();
+        }
+
+        async function fetchWithAuth(url) {
+            const res = await fetch(url, {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+            if (res.status === 401) {
+                logout();
+                return null;
+            }
+            return res.json();
+        }
+
+        async function fetchDashboard() {
+            try {
+                const data = await fetchWithAuth(`${API_BASE}/dashboard`);
+                return data !== null;
+            } catch {
+                return false;
+            }
+        }
+
+        async function loadDashboard() {
+            const data = await fetchWithAuth(`${API_BASE}/dashboard`);
+            if (!data) return;
+            document.getElementById('stat-scans').textContent = data.today_scans || 0;
+            document.getElementById('stat-chats').textContent = data.today_chats || 0;
+            document.getElementById('stat-tokens').textContent = (data.today_tokens || 0).toLocaleString();
+            document.getElementById('stat-cost').textContent = `$${data.today_cost || 0}`;
+            document.getElementById('stat-sessions').textContent = data.unique_visitors || data.total_sessions || 0;
+            document.getElementById('stat-total-tokens').textContent = (data.total_tokens || 0).toLocaleString();
+            document.getElementById('stat-keys').textContent = data.api_keys_count || 0;
+            document.getElementById('stat-total-cost').textContent = `$${data.total_cost || 0}`;
+
+            // Load IPs from stats
+            const stats = await fetchWithAuth(`${API_BASE}/stats`);
+            if (stats && stats.unique_ips) {
+                const ipList = document.getElementById('ip-list');
+                if (stats.unique_ips.length > 0) {
+                    ipList.innerHTML = stats.unique_ips.map(ip =>
+                        `<span class="bg-slate-700 px-2 py-1 rounded font-mono">${ip}</span>`
+                    ).join('');
+                } else {
+                    ipList.innerHTML = '<span class="text-slate-500">Henüz IP kaydı yok</span>';
+                }
+            }
+        }
+
+        async function refreshAllData() {
+            const icon = document.getElementById('refresh-icon');
+            icon.classList.add('animate-spin');
+
+            await loadDashboard();
+
+            setTimeout(() => icon.classList.remove('animate-spin'), 500);
+        }
+
+        // Countdown timer for auto-refresh
+        let countdownValue = 10;
+
+        setInterval(() => {
+            const autoRefresh = document.getElementById('auto-refresh');
+            const countdownEl = document.getElementById('countdown-timer');
+
+            if (autoRefresh && autoRefresh.checked) {
+                const currentTab = document.querySelector('.tab-btn.active');
+                if (currentTab && currentTab.dataset.tab === 'dashboard') {
+                    countdownValue--;
+                    if (countdownEl) countdownEl.textContent = countdownValue;
+
+                    if (countdownValue <= 0) {
+                        loadDashboard();
+                        countdownValue = 10;
+                        if (countdownEl) countdownEl.textContent = countdownValue;
+                    }
+                } else {
+                    countdownValue = 10;
+                    if (countdownEl) countdownEl.textContent = countdownValue;
+                }
+            } else {
+                countdownValue = 10;
+                if (countdownEl) countdownEl.textContent = countdownValue;
+            }
+        }, 1000);
+
+        async function loadGreetings() {
+            const qr = await fetchWithAuth(`${API_BASE}/greetings/qr`);
+            const general = await fetchWithAuth(`${API_BASE}/greetings/general`);
+
+            if (qr) document.getElementById('qr-greetings').value = qr.content || '';
+            if (general) document.getElementById('general-greetings').value = general.content || '';
+        }
+
+        async function saveQrGreetings() {
+            const content = document.getElementById('qr-greetings').value;
+            await fetch(`${API_BASE}/greetings/qr`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify({ content })
+            });
+            alert('Kaydedildi!');
+        }
+
+        async function saveGeneralGreetings() {
+            const content = document.getElementById('general-greetings').value;
+            await fetch(`${API_BASE}/greetings/general`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify({ content })
+            });
+            alert('Kaydedildi!');
+        }
+
+        async function loadTokens() {
+            const data = await fetchWithAuth(`${API_BASE}/tokens`);
+            if (!data) return;
+
+            document.getElementById('token-input').textContent = (data.total?.input || 0).toLocaleString();
+            document.getElementById('token-output').textContent = (data.total?.output || 0).toLocaleString();
+            document.getElementById('token-requests').textContent = (data.total?.requests || 0).toLocaleString();
+
+            const daily = document.getElementById('token-daily');
+            daily.innerHTML = '';
+            for (const [date, stats] of Object.entries(data.daily_history || {})) {
+                daily.innerHTML += `
+                    <div class="flex justify-between items-center bg-slate-700 rounded-lg px-4 py-2">
+                        <span>${date}</span>
+                        <span class="text-slate-400">Input: ${stats.input.toLocaleString()} | Output: ${stats.output.toLocaleString()}</span>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadStats() {
+            const data = await fetchWithAuth(`${API_BASE}/stats`);
+            if (!data) return;
+
+            const topQr = document.getElementById('top-qr');
+            topQr.innerHTML = '';
+            (data.top_qr_codes || []).forEach((q, i) => {
+                topQr.innerHTML += `
+                    <div class="flex justify-between items-center bg-slate-700 rounded-lg px-4 py-2">
+                        <span>${i + 1}. ${q.name || q.qr_id}</span>
+                        <span class="text-blue-400 font-bold">${q.count}</span>
+                    </div>
+                `;
+            });
+
+            const questions = document.getElementById('recent-questions');
+            questions.innerHTML = '';
+            (data.recent_questions || []).forEach(q => {
+                questions.innerHTML += `
+                    <div class="bg-slate-700 rounded-lg px-4 py-2 text-sm">
+                        <p class="text-white">${q.text}</p>
+                        <p class="text-slate-500 text-xs mt-1">${new Date(q.time).toLocaleString('tr-TR')}</p>
+                    </div>
+                `;
+            });
+        }
+
+        async function loadApiKeys() {
+            const data = await fetchWithAuth(`${API_BASE}/api-keys`);
+            if (!data) return;
+
+            document.getElementById('current-key').textContent = `Aktif: #${data.current_index + 1}`;
+
+            const list = document.getElementById('api-keys-list');
+            list.innerHTML = '';
+            (data.keys || []).forEach((k, i) => {
+                const statusColor = k.status === 'active' ? 'text-green-400' : 'text-red-400';
+                list.innerHTML += `
+                    <div class="flex justify-between items-center bg-slate-700 rounded-lg px-4 py-3">
+                        <div>
+                            <span class="font-mono">${k.key_preview}</span>
+                            <span class="text-xs text-slate-400 ml-2">Key #${i + 1}</span>
+                        </div>
+                        <span class="${statusColor} font-medium">${k.status || 'unknown'}</span>
+                    </div>
+                `;
+            });
+        }
+
+        // ========== RAG EXHIBITS ==========
+        let allExhibits = [];
+        let currentEditExhibitId = null;
+        let isCreatingNew = false;
+
+        async function loadExhibits() {
+            const data = await fetchWithAuth(`${API_BASE}/rag-exhibits`);
+            if (!data) return;
+
+            allExhibits = data.exhibits || [];
+            // Sort by QR number
+            allExhibits.sort((a, b) => {
+                if (!a.qr_id && !b.qr_id) return a.exhibit_id.localeCompare(b.exhibit_id);
+                if (!a.qr_id) return 1;
+                if (!b.qr_id) return -1;
+                const numA = parseInt(a.qr_id.replace('qr_', '')) || 999;
+                const numB = parseInt(b.qr_id.replace('qr_', '')) || 999;
+                return numA - numB;
+            });
+            document.getElementById('exhibit-count').textContent = data.total || 0;
+            renderExhibitsTable(allExhibits);
+        }
+
+        function renderExhibitsTable(exhibits) {
+            const tbody = document.getElementById('rag-exhibits-list');
+            tbody.innerHTML = '';
+
+            exhibits.forEach(e => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-700/50';
+                tr.innerHTML = `
+                    <td class="px-4 py-3">
+                        ${e.qr_id ? `<span class="bg-blue-600/30 text-blue-300 px-2 py-1 rounded text-xs font-mono">${e.qr_id}</span>` : '<span class="text-slate-500">-</span>'}
+                    </td>
+                    <td class="px-4 py-3 font-medium">${e.title.substring(0, 50)}${e.title.length > 50 ? '...' : ''}</td>
+                    <td class="px-4 py-3 text-slate-400 text-sm font-mono">${e.exhibit_id.substring(0, 25)}${e.exhibit_id.length > 25 ? '...' : ''}</td>
+                    <td class="px-4 py-3 text-slate-400 text-sm">${(e.size / 1000).toFixed(1)} KB</td>
+                    <td class="px-4 py-3 text-right flex gap-1 justify-end">
+                        ${e.qr_id ? `<button onclick="showQRCode('${e.qr_id}')" class="text-purple-400 hover:text-purple-300" title="QR Kodu Göster">
+                            <span class="material-symbols-outlined" style="font-size:20px">qr_code_2</span>
+                        </button>` : ''}
+                        <button onclick="openExhibitEditor('${e.exhibit_id}')" class="text-blue-400 hover:text-blue-300" title="Düzenle">
+                            <span class="material-symbols-outlined" style="font-size:20px">edit</span>
+                        </button>
+                        <button onclick="deleteRAGExhibit('${e.exhibit_id}')" class="text-red-400 hover:text-red-300" title="Sil">
+                            <span class="material-symbols-outlined" style="font-size:20px">delete</span>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterExhibits() {
+            const search = document.getElementById('exhibit-search').value.toLowerCase();
+            const filtered = allExhibits.filter(e =>
+                e.title.toLowerCase().includes(search) ||
+                e.exhibit_id.toLowerCase().includes(search) ||
+                (e.qr_id && e.qr_id.toLowerCase().includes(search))
+            );
+            renderExhibitsTable(filtered);
+        }
+
+        function getNextQRNumber() {
+            const usedNumbers = allExhibits
+                .filter(e => e.qr_id && e.qr_id.startsWith('qr_'))
+                .map(e => parseInt(e.qr_id.replace('qr_', '')) || 0);
+            const maxNum = usedNumbers.length > 0 ? Math.max(...usedNumbers) : 0;
+            return maxNum + 1;
+        }
+
+        function autoFillQR() {
+            const nextNum = getNextQRNumber();
+            document.getElementById('modal-qr-id').value = `qr_${String(nextNum).padStart(2, '0')}`;
+        }
+
+        let currentQRInstance = null;
+
+        function showQRCode(qrId, exhibitTitle = '') {
+            // Find exhibit title if not provided
+            if (!exhibitTitle) {
+                const exhibit = allExhibits.find(e => e.qr_id === qrId);
+                exhibitTitle = exhibit ? exhibit.title : '';
+            }
+
+            document.getElementById('qr-modal-title').textContent = exhibitTitle;
+            document.getElementById('qr-modal-id').textContent = qrId;
+
+            // Clear previous QR code
+            const container = document.getElementById('qr-code-container');
+            container.innerHTML = '';
+
+            // Generate new QR code
+            currentQRInstance = new QRCode(container, {
+                text: qrId,
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            document.getElementById('qr-modal').classList.remove('hidden');
+            document.getElementById('qr-modal').classList.add('flex');
+        }
+
+        function closeQRModal() {
+            document.getElementById('qr-modal').classList.add('hidden');
+            document.getElementById('qr-modal').classList.remove('flex');
+        }
+
+        function downloadQRCode() {
+            const container = document.getElementById('qr-code-container');
+            const canvas = container.querySelector('canvas');
+            const qrId = document.getElementById('qr-modal-id').textContent;
+
+            if (canvas) {
+                const link = document.createElement('a');
+                link.download = `${qrId}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } else {
+                // Fallback for img element
+                const img = container.querySelector('img');
+                if (img) {
+                    const link = document.createElement('a');
+                    link.download = `${qrId}.png`;
+                    link.href = img.src;
+                    link.click();
+                }
+            }
+        }
+
+        function showCreateExhibitModal() {
+            isCreatingNew = true;
+            currentEditExhibitId = null;
+            document.getElementById('modal-title').textContent = 'Yeni Eser Oluştur';
+            document.getElementById('modal-exhibit-id').value = '';
+            document.getElementById('modal-exhibit-id').disabled = false;
+            document.getElementById('modal-qr-id').value = '';
+            document.getElementById('modal-title-input').value = '';
+            document.getElementById('modal-content').value = '';
+            document.getElementById('exhibit-modal').classList.remove('hidden');
+            document.getElementById('exhibit-modal').classList.add('flex');
+        }
+
+        async function openExhibitEditor(exhibitId) {
+            isCreatingNew = false;
+            currentEditExhibitId = exhibitId;
+
+            const data = await fetchWithAuth(`${API_BASE}/rag-exhibits/${exhibitId}`);
+            if (!data) return;
+
+            // Extract title from first line
+            const content = data.content || '';
+            const lines = content.split('\n');
+            const title = lines[0] || '';
+            const restContent = lines.slice(1).join('\n').trimStart();
+
+            document.getElementById('modal-title').textContent = 'Eser Düzenle';
+            document.getElementById('modal-exhibit-id').value = data.exhibit_id;
+            document.getElementById('modal-exhibit-id').disabled = true;
+            document.getElementById('modal-qr-id').value = data.qr_id || '';
+            document.getElementById('modal-title-input').value = title;
+            document.getElementById('modal-content').value = restContent;
+            document.getElementById('exhibit-modal').classList.remove('hidden');
+            document.getElementById('exhibit-modal').classList.add('flex');
+        }
+
+        function closeExhibitModal() {
+            document.getElementById('exhibit-modal').classList.add('hidden');
+            document.getElementById('exhibit-modal').classList.remove('flex');
+            currentEditExhibitId = null;
+            isCreatingNew = false;
+        }
+
+        async function saveExhibitModal() {
+            const exhibitId = document.getElementById('modal-exhibit-id').value.trim();
+            const qrId = document.getElementById('modal-qr-id').value.trim();
+            const titleInput = document.getElementById('modal-title-input').value.trim();
+            const contentBody = document.getElementById('modal-content').value;
+
+            // Combine title and content
+            const fullContent = titleInput ? `${titleInput}\n\n${contentBody}` : contentBody;
+
+            if (!exhibitId) {
+                alert('Dosya ID gerekli!');
+                return;
+            }
+
+            let res;
+            if (isCreatingNew) {
+                res = await fetch(`${API_BASE}/rag-exhibits`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ exhibit_id: exhibitId, content: fullContent, qr_id: qrId })
+                });
+            } else {
+                res = await fetch(`${API_BASE}/rag-exhibits/${currentEditExhibitId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ content: fullContent, qr_id: qrId })
+                });
+            }
+
+            if (res.ok) {
+                const data = await res.json();
+                alert(data.message || 'Kaydedildi!');
+                closeExhibitModal();
+                loadExhibits();
+            } else {
+                const err = await res.json();
+                alert('Hata: ' + (err.detail || 'Bilinmeyen hata'));
+            }
+        }
+
+        async function deleteRAGExhibit(exhibitId) {
+            if (!confirm(`"${exhibitId}" silinsin mi?\n\nBu işlem geri alınamaz!`)) return;
+
+            const res = await fetch(`${API_BASE}/rag-exhibits/${exhibitId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+
+            if (res.ok) {
+                alert('Eser silindi! RAG ingestion gerekli.');
+                loadExhibits();
+            } else {
+                alert('Hata oluştu!');
+            }
+        }
+
+        async function runRAGIngestion() {
+            const confirmed = await customConfirm('RAG veritabanı yeniden oluşturulacak.\n\nBu işlem birkaç saniye sürebilir. Devam?', 'RAG Güncelleme');
+            if (!confirmed) return;
+
+            // Show loading overlay
+            const overlay = document.getElementById('loading-overlay');
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+
+            const btn = document.getElementById('ingest-btn');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span> İşleniyor...';
+
+            try {
+                const res = await fetch(`${API_BASE}/rag-ingest`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ clear: true })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    await customAlert(data.message || 'RAG güncellendi!', 'success');
+                } else {
+                    const err = await res.json();
+                    await customAlert('Hata: ' + (err.detail || 'Bilinmeyen hata'), 'error');
+                }
+            } catch (e) {
+                await customAlert('Bağlantı hatası: ' + e.message, 'error');
+            } finally {
+                // Hide loading overlay
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // Update showTab to handle exhibits
+        const originalShowTab = showTab;
+        showTab = function (tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('active', 'bg-blue-500');
+                b.classList.add('bg-slate-700');
+            });
+
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            document.querySelector(`[data-tab="${tabName}"]`).classList.remove('bg-slate-700');
+
+            if (tabName === 'dashboard') loadDashboard();
+            if (tabName === 'exhibits') loadExhibits();
+            if (tabName === 'tokens') loadTokens();
+            if (tabName === 'stats') loadStats();
+            if (tabName === 'api') loadApiKeys();
+        };
+    </script>
+</body>
+
+</html>
