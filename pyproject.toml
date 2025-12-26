@@ -16,6 +16,7 @@ dependencies = [
   "sentence-transformers>=5.1.2",
   "langchain-google-genai",
   "google-api-core>=2.28.1",
+  "google-genai",
 ]
 
 [tool.uv]
