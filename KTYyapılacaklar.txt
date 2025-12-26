@@ -7,3 +7,4 @@ resim olanlarda karakter sola doğru olsun
 
 adminde eklene bir resmi düzenlerken sildiğimde gerçektede C:\Users\pc\Desktop\ai muze guide\ai-museum-guide\web\static\exhibits içden de sil resmi
 
+arka plana bakılan eseri koyma (DEVAM EDİYOR)
