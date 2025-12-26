@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+        name="viewport" />
     <title>AI Müze Rehberi - KODE-X</title>
     <meta name="description"
         content="Yapay zeka destekli müze rehberiniz. QR kod okutarak veya doğrudan sorarak eserler hakkında bilgi alın." />
@@ -74,9 +75,16 @@
     </script>
 
     <style>
+        html,
         body {
             min-height: 100dvh;
             overflow: hidden;
+            touch-action: none;
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: none;
+            position: fixed;
+            width: 100%;
+            height: 100%;
         }
 
         .glass-panel {
@@ -322,10 +330,14 @@
     <div id="chat-screen" class="screen flex-col h-screen w-full relative">
         <!-- Avatar Background - Shifted Up -->
         <div class="absolute inset-0 z-0">
-            <div id="avatar-container" class="h-full w-full" style="transform: translateY(-8%) scale(1.1);"></div>
+            <!-- Museum Background Image -->
+            <div class="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                style="background-image: url('/static/museum-bg.png'); filter: blur(1px) brightness(0.6);"></div>
+            <div id="avatar-container" class="h-full w-full relative z-10"
+                style="transform: translateY(-5%) scale(1.25);"></div>
             <!-- Gradient overlay -->
             <div
-                class="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-background-dark/80 pointer-events-none">
+                class="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-background-dark/80 pointer-events-none z-20">
             </div>
         </div>
 
@@ -369,8 +381,8 @@
             </div>
         </div>
 
-        <!-- Bottom Interaction Zone - Moved Up -->
-        <div class="relative z-30 flex flex-col items-center w-full px-4 pb-24 gap-4">
+        <!-- Bottom Interaction Zone -->
+        <div class="relative z-30 flex flex-col items-center w-full px-4 pb-20 gap-4">
             <!-- Chat Input (Hidden by default, shown when typing) -->
             <div id="chat-input-panel" class="w-full max-w-md glass-panel rounded-xl p-3" style="display: none;">
                 <div class="flex items-center gap-3">
@@ -469,43 +481,58 @@
             "qr_09": "Nota Defteri",
             "qr_10": "Daktilo Makinesi"
         };
+        // Greeting phrases loaded from files
+        let QR_GREETINGS = [];
+        let GENERAL_GREETINGS = [];
 
-        // Greeting phrases for QR mode (with {exhibit} placeholder)
-        const QR_GREETINGS = [
-            "Merhaba! Ben yapay zeka rehberinizim. {exhibit} eserine baktığınızı görüyorum. Size nasıl yardımcı olabilirim?",
-            "Hoş geldiniz! {exhibit} hakkında bilgi almak için doğru yerdesiniz. Ne merak ediyorsunuz?",
-            "Selam! {exhibit} eserini keşfetmeye hazır mısınız? Sorularınızı bekliyorum.",
-            "Merhaba! {exhibit} gerçekten ilginç bir eser. Hangi detayları öğrenmek istersiniz?",
-            "Hoş geldiniz! Ben KODE-X, yapay zeka müze rehberiniz. {exhibit} hakkında her şeyi anlatmaya hazırım!",
-            "Selam! {exhibit} eserine hoş geldiniz. Tarihini mi, hikayesini mi öğrenmek istersiniz?",
-            "Merhaba! {exhibit} müzemizin en değerli eserlerinden biri. Birlikte keşfedelim mi?",
-            "Hoş geldiniz! {exhibit} ile ilgili merak ettiğiniz her şeyi sorun.",
-            "Selam! {exhibit} hakkında size rehberlik etmekten mutluluk duyarım. Ne öğrenmek istersiniz?",
-            "Merhaba! Ben dijital rehberinizim. {exhibit} eserinin büyüleyici hikayesini anlatmama izin verin."
-        ];
+        // Load greetings from txt files
+        async function loadGreetings() {
+            try {
+                // Load QR mode greetings
+                const qrResponse = await fetch('/static/data/qrli_greeting.txt');
+                if (qrResponse.ok) {
+                    const text = await qrResponse.text();
+                    QR_GREETINGS = text.split('\n').filter(line => line.trim());
+                }
+            } catch (e) {
+                console.warn('Could not load QR greetings:', e);
+            }
 
-        // Greeting phrases for general mode (no QR)
-        const GENERAL_GREETINGS = [
-            "Merhaba! Ben KODE-X, yapay zeka müze rehberiniz. Müzemiz hakkında ne öğrenmek istersiniz?",
-            "Hoş geldiniz! TED Kolej Müzesi'ne hoş geldiniz. Size nasıl yardımcı olabilirim?",
-            "Selam! Müzemizdeki tüm eserler hakkında bilgi verebilirim. Ne merak ediyorsunuz?",
-            "Merhaba! Tarihi bir yolculuğa hazır mısınız? Hangi eser hakkında konuşalım?",
-            "Hoş geldiniz! Müzemizin zengin koleksiyonunu keşfetmenize yardımcı olayım. Nereden başlayalım?"
-        ];
+            try {
+                // Load general mode greetings
+                const genResponse = await fetch('/static/data/qrsiz_greeting.txt');
+                if (genResponse.ok) {
+                    const text = await genResponse.text();
+                    GENERAL_GREETINGS = text.split('\n').filter(line => line.trim());
+                }
+            } catch (e) {
+                console.warn('Could not load general greetings:', e);
+            }
+
+            // Fallback if files not loaded
+            if (QR_GREETINGS.length === 0) {
+                QR_GREETINGS = ["Merhaba! {exhibit} hakkında bilgi almak için hazırım."];
+            }
+            if (GENERAL_GREETINGS.length === 0) {
+                GENERAL_GREETINGS = ["Merhaba! Size nasıl yardımcı olabilirim?"];
+            }
+        }
 
         // Get random greeting
         function getRandomGreeting(isQrMode, exhibitTitle = '') {
-            if (isQrMode && exhibitTitle) {
+            if (isQrMode && exhibitTitle && QR_GREETINGS.length > 0) {
                 const greeting = QR_GREETINGS[Math.floor(Math.random() * QR_GREETINGS.length)];
                 return greeting.replace('{exhibit}', exhibitTitle);
-            } else {
+            } else if (GENERAL_GREETINGS.length > 0) {
                 return GENERAL_GREETINGS[Math.floor(Math.random() * GENERAL_GREETINGS.length)];
             }
+            return "Merhaba! Size nasıl yardımcı olabilirim?";
         }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAzureConfig();
+            await loadGreetings();
             generateNetworkQR();
             populateTestDropdown();
         });
@@ -564,12 +591,43 @@
         // ========== NAVIGATION ==========
         window.goToStart = function () {
             stopQRScanner();
+
+            // Stop any ongoing speech
+            if (currentAudioSource) {
+                try {
+                    currentAudioSource.stop();
+                } catch (e) { }
+                currentAudioSource = null;
+            }
+            if (lipSyncAnimationId) {
+                cancelAnimationFrame(lipSyncAnimationId);
+                lipSyncAnimationId = null;
+            }
+            isSpeaking = false;
+
+            // Clean up avatar for fresh reload next time
+            if (head) {
+                try {
+                    head.stop();
+                } catch (e) { }
+                head = null;
+            }
+            morphMeshes = [];
+            isAvatarReady = false;
+
+            // Clear avatar container
+            const avatarContainer = document.getElementById('avatar-container');
+            if (avatarContainer) {
+                avatarContainer.innerHTML = '';
+            }
+
             showScreen('start');
             qrMode = false;
             currentQrId = null;
             currentExhibitId = null;
             currentExhibitTitle = null;
             conversationHistory = [];
+            window.messagesPanelOpened = false;  // Reset for next session
         };
 
         window.startWithQR = function () {
@@ -660,9 +718,21 @@
         }
 
         // Auto-test on select change (no button needed)
-        window.autoTestQR = function (qrId) {
+        window.autoTestQR = async function (qrId) {
+            console.log('autoTestQR called with:', qrId);
             if (!qrId) return;  // Ignore empty selection
-            stopQRScanner();
+
+            // Wait for scanner to fully stop before continuing
+            try {
+                if (html5QrCode && html5QrCode.isScanning) {
+                    await html5QrCode.stop();
+                }
+            } catch (e) {
+                console.warn('Scanner stop error:', e);
+            }
+
+            currentQrId = null;  // Reset to allow re-testing same QR
+            console.log('Calling onQRSuccess...');
             onQRSuccess(qrId);
         };
 
@@ -679,7 +749,6 @@
             } else {
                 modeIndicator.textContent = 'Genel Mod';
                 exhibitBadge.style.display = 'none';
-                addSystemMessage('👋 Hoş geldiniz! Müze hakkında sorularınızı sorun.');
             }
 
             initAvatar();
@@ -734,6 +803,11 @@
                 isAvatarReady = true;
                 setStatus('Hazır');
                 showToast('Avatar hazır', 'success');
+
+                // Speak random greeting
+                const greeting = getRandomGreeting(qrMode, currentExhibitTitle);
+                addSystemMessage(greeting);
+                setTimeout(() => speakWithAvatar(greeting), 500);
 
             } catch (err) {
                 console.error('Avatar load error:', err);
@@ -1086,7 +1160,14 @@
         }
 
         function showMessagesPanel() {
-            document.getElementById('messages-panel').style.display = 'block';
+            const panel = document.getElementById('messages-panel');
+            const messages = document.getElementById('messages');
+            panel.style.display = 'block';
+            // Keep messages collapsed initially
+            if (!window.messagesPanelOpened) {
+                messages.style.display = 'none';
+                window.messagesPanelOpened = true;
+            }
         }
 
         window.toggleMessages = function () {
