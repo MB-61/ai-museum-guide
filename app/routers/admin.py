@@ -104,7 +104,7 @@ async def get_dashboard(authorized: bool = Depends(verify_token)):
 @router.get("/greetings/qr")
 async def get_qr_greetings(authorized: bool = Depends(verify_token)):
     """Get QR mode greetings."""
-    path = os.path.join(WEB_DIR, "data", "qrli_greeting.txt")
+    path = os.path.join(WEB_DIR, "static", "data", "qrli_greeting.txt")
     try:
         with open(path, "r", encoding="utf-8") as f:
             return {"content": f.read(), "path": path}
@@ -115,7 +115,7 @@ async def get_qr_greetings(authorized: bool = Depends(verify_token)):
 @router.put("/greetings/qr")
 async def update_qr_greetings(data: GreetingUpdate, authorized: bool = Depends(verify_token)):
     """Update QR mode greetings."""
-    path = os.path.join(WEB_DIR, "data", "qrli_greeting.txt")
+    path = os.path.join(WEB_DIR, "static", "data", "qrli_greeting.txt")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         f.write(data.content)
@@ -125,7 +125,7 @@ async def update_qr_greetings(data: GreetingUpdate, authorized: bool = Depends(v
 @router.get("/greetings/general")
 async def get_general_greetings(authorized: bool = Depends(verify_token)):
     """Get general mode greetings."""
-    path = os.path.join(WEB_DIR, "data", "qrsiz_greeting.txt")
+    path = os.path.join(WEB_DIR, "static", "data", "qrsiz_greeting.txt")
     try:
         with open(path, "r", encoding="utf-8") as f:
             return {"content": f.read(), "path": path}
@@ -136,7 +136,7 @@ async def get_general_greetings(authorized: bool = Depends(verify_token)):
 @router.put("/greetings/general")
 async def update_general_greetings(data: GreetingUpdate, authorized: bool = Depends(verify_token)):
     """Update general mode greetings."""
-    path = os.path.join(WEB_DIR, "data", "qrsiz_greeting.txt")
+    path = os.path.join(WEB_DIR, "static", "data", "qrsiz_greeting.txt")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         f.write(data.content)
