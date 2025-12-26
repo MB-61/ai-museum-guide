@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
 
-from app.routers import qr, chat, voice, character
+from app.routers import qr, chat, voice, character, admin
 
 
 def create_app() -> FastAPI:
@@ -36,6 +36,7 @@ def create_app() -> FastAPI:
     app.include_router(
         character.router, prefix="/api/v1", tags=["Character Agent"]
     )
+    app.include_router(admin.router, prefix="/api/v1", tags=["Admin"])
 
     # Serve frontend static files
     web_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "web")
@@ -45,6 +46,10 @@ def create_app() -> FastAPI:
         @app.get("/")
         async def serve_frontend():
             return FileResponse(os.path.join(web_dir, "avatar-guide-v2.html"))
+        
+        @app.get("/admin")
+        async def serve_admin():
+            return FileResponse(os.path.join(web_dir, "admin.html"))
 
     return app
 

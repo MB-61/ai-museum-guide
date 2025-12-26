@@ -1,0 +1,37 @@
+{
+  "qr_scans": {
+    "qr_11": {
+      "count": 1,
+      "name": "Si Bemol Trompet"
+    },
+    "qr_06": {
+      "count": 1,
+      "name": "Eski Mezuniyet Cübbeleri ve Kepleri"
+    }
+  },
+  "questions": [
+    {
+      "text": "Anlat",
+      "time": "2025-12-26T05:15:54.538509"
+    },
+    {
+      "text": "Slm",
+      "time": "2025-12-26T05:15:12.316921"
+    },
+    {
+      "text": "merhaba",
+      "time": "2025-12-26T04:56:59.816714"
+    }
+  ],
+  "daily_activity": {
+    "2025-12-26": {
+      "scans": 2,
+      "chats": 3
+    }
+  },
+  "sessions": 2,
+  "unique_ips": [
+    "127.0.0.1",
+    "31.223.74.240"
+  ]
+}

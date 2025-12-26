@@ -121,6 +121,17 @@ class APIKeyRotationManager:
                     HumanMessage(content=user_prompt)
                 ])
                 
+                # Track token usage
+                try:
+                    from app.services import token_tracker
+                    # Estimate tokens (roughly 4 chars per token)
+                    input_tokens = (len(system_prompt) + len(user_prompt)) // 4
+                    output_tokens = len(response.content) // 4
+                    token_tracker.track_tokens(input_tokens, output_tokens)
+                    logger.info(f"Tracked tokens: in={input_tokens}, out={output_tokens}")
+                except Exception as track_err:
+                    logger.warning(f"Token tracking failed: {track_err}")
+                
                 return response.content
                 
             except ResourceExhausted as e:
@@ -180,3 +191,34 @@ def call_llm_with_rotation(system_prompt: str, user_prompt: str) -> str:
     """
     manager = get_key_manager()
     return manager.call_llm_with_retry(system_prompt, user_prompt)
+
+
+# Export API keys for admin panel
+def get_gemini_keys():
+    """Get list of API keys (for admin)."""
+    manager = get_key_manager()
+    return manager.api_keys
+
+
+def get_key_status():
+    """Get API key status for admin panel."""
+    manager = get_key_manager()
+    keys_info = []
+    for i, key in enumerate(manager.api_keys):
+        keys_info.append({
+            "key": key,
+            "status": "active" if i == manager.current_key_index else "standby",
+            "last_used": None
+        })
+    return {
+        "current_index": manager.current_key_index,
+        "keys": keys_info
+    }
+
+
+# For admin panel import
+GEMINI_API_KEYS = None
+try:
+    GEMINI_API_KEYS = get_gemini_keys()
+except:
+    GEMINI_API_KEYS = []
