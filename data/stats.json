@@ -5,11 +5,15 @@
       "name": "Si Bemol Trompet"
     },
     "qr_06": {
-      "count": 1,
+      "count": 2,
       "name": "Eski Mezuniyet Cübbeleri ve Kepleri"
     }
   },
   "questions": [
+    {
+      "text": "bende hangi eser hakında konuşacağımı bilmiyorum",
+      "time": "2025-12-26T05:59:48.991362"
+    },
     {
       "text": "Anlat",
       "time": "2025-12-26T05:15:54.538509"
@@ -25,11 +29,11 @@
   ],
   "daily_activity": {
     "2025-12-26": {
-      "scans": 2,
-      "chats": 3
+      "scans": 3,
+      "chats": 4
     }
   },
-  "sessions": 2,
+  "sessions": 3,
   "unique_ips": [
     "127.0.0.1",
     "31.223.74.240"
