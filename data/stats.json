@@ -33,11 +33,11 @@
       "name": "Tarihi Diplomalar ve Belgeler"
     },
     "qr_02": {
-      "count": 5,
+      "count": 6,
       "name": "Atatürk Anıtı (İncek Kampüsü)"
     },
     "qr_03": {
-      "count": 8,
+      "count": 11,
       "name": "Laboratuvar Aküsü (Eski Dönem)"
     }
   },
@@ -117,11 +117,11 @@
       "chats": 17
     },
     "2025-12-27": {
-      "scans": 18,
+      "scans": 22,
       "chats": 0
     }
   },
-  "sessions": 26,
+  "sessions": 30,
   "unique_ips": [
     "127.0.0.1",
     "31.223.74.240",
