@@ -1,25 +1,31 @@
+# -*- coding: utf-8 -*-
+"""
+RAG Service - Retrieval Augmented Generation with Memory
+"""
+
 from typing import List, Optional, Tuple
 
 from app.services.llm import call_llm
 from app.services.retriever import retrieve
-from app.services.prompts import build_prompt, build_exhibit_prompt
+from app.services.prompts import (
+    build_adaptive_prompt,
+    detect_question_type,
+    QuestionType
+)
+from app.services.memory_service import enhance_question_with_context
 from app.utils.ids import resolve_qr
 
 
-def format_history(history: List) -> str:
-    """Format conversation history for context"""
-    if not history:
-        return ""
-    
-    # Limit to last 5 messages to avoid context overflow
-    recent = history[-5:] if len(history) > 5 else history
-    
-    lines = []
-    for msg in recent:
-        role = "Ziyaretçi" if msg.role == "user" else "Rehber"
-        lines.append(f"{role}: {msg.content}")
-    
-    return "\n".join(lines)
+def get_chunk_count(question_type: QuestionType, is_exhibit_mode: bool) -> int:
+    """Soru tipine göre çekilecek chunk sayısını belirle."""
+    if question_type == QuestionType.DETAILED:
+        return 10  # Detaylı sorular için daha fazla context
+    elif question_type == QuestionType.LIST:
+        return 12  # Liste için tüm eserleri kapsamaya çalış
+    elif is_exhibit_mode:
+        return 4   # Eser modu için yeterli
+    else:
+        return 6   # Genel sorular için orta düzey
 
 
 def run_rag(
@@ -28,41 +34,68 @@ def run_rag(
     history: List = None
 ) -> Tuple[str, List[str]]:
     """
-    Merkez RAG entry point.
+    Merkez RAG entry point - Akıllı bellek sistemi ile.
 
-    - qr_id varsa -> Eser modu (belirli eser hakkında, 4 chunk)
-    - qr_id yoksa -> Genel mod (tüm müze, 8 chunk - eser listesi için daha fazla)
-    - history: Önceki konuşmalar (son 5 mesaj saklanır)
+    - Memory service ile referans çözümleme
+    - Soru tipini algılar (SHORT/MEDIUM/DETAILED/LIST)
+    - Tipe göre chunk sayısı ve prompt ayarlar
     """
     if history is None:
         history = []
 
     exhibit_id: Optional[str] = None
+    exhibit_name: Optional[str] = None
     is_exhibit_mode = False
     
     if qr_id is not None:
         exhibit_id = resolve_qr(qr_id)
         is_exhibit_mode = True
+        # exhibit_id'den okunabilir isim oluştur
+        if exhibit_id:
+            exhibit_name = exhibit_id.replace("_", " ").replace("-", " ").title()
 
-    # Genel modda daha fazla chunk çek (eser listesi için)
-    k = 4 if is_exhibit_mode else 8
-    chunks = retrieve(question, exhibit_id=exhibit_id, k=k)
+    # Memory service ile soruyu zenginleştir
+    enhanced_question, history_context, conv_context = enhance_question_with_context(
+        question=question,
+        history=history,
+        qr_id=qr_id,
+        exhibit_name=exhibit_name
+    )
+    
+    # Zenginleştirilmiş soruyla soru tipini algıla
+    question_type = detect_question_type(enhanced_question)
+    
+    # Soru tipine göre chunk sayısını belirle
+    k = get_chunk_count(question_type, is_exhibit_mode)
+    
+    # Retrieval - zenginleştirilmiş soruyla
+    chunks = retrieve(enhanced_question, exhibit_id=exhibit_id, k=k)
 
     # Context derleme
-    context = "\n---\n".join(d for d, _m in chunks) if chunks else ""
+    rag_context = "\n---\n".join(d for d, _m in chunks) if chunks else ""
     
     # Konuşma geçmişini ekle
-    history_text = format_history(history)
-    if history_text:
-        context = f"ÖNCEKİ KONUŞMA:\n{history_text}\n\n---\n\nİLGİLİ BİLGİLER:\n{context}"
-
-    # Mod'a göre farklı prompt kullan
-    if is_exhibit_mode:
-        prompt = build_exhibit_prompt(context, question)
-        system = "Sen TED Kolej Müzesi rehberisin. Seçili eser hakkında detaylı bilgi ver. Önceki konuşmayı dikkate al. Türkçe cevap ver."
+    if history_context:
+        full_context = f"{history_context}\n\n---\n\nİLGİLİ BİLGİLER:\n{rag_context}"
     else:
-        prompt = build_prompt(context, question, is_exhibit_mode=False)
-        system = "Sen TED Kolej Müzesi rehberisin. Tüm müze hakkında bilgi ver. Önceki konuşmayı dikkate al. Türkçe cevap ver."
+        full_context = rag_context
+
+    # Adaptif prompt oluştur
+    prompt, detected_type = build_adaptive_prompt(
+        context=full_context,
+        question=enhanced_question,  # Zenginleştirilmiş soru
+        exhibit_title=conv_context.current_exhibit
+    )
+    
+    # System prompt - soru tipine göre
+    type_hints = {
+        QuestionType.SHORT: "Kısa ve öz cevap ver (1-2 cümle).",
+        QuestionType.MEDIUM: "Bilgilendirici cevap ver (3-5 cümle).",
+        QuestionType.DETAILED: "Detaylı ve zengin anlatım sun (5+ cümle).",
+        QuestionType.LIST: "Liste formatında cevap ver."
+    }
+    
+    system = f"Sen TED Kolej Müzesi rehberisin. {type_hints.get(detected_type, '')} Önceki konuşmayı dikkate al. Türkçe cevap ver."
 
     answer = call_llm(system_prompt=system, user_prompt=prompt)
     sources = [m.get("source") for _d, m in chunks if m and m.get("source")]
@@ -73,8 +106,6 @@ def run_rag(
 class RAGService:
     """
     Eski kodla geriye dönük uyumluluk için bırakıldı.
-    Eğer bir yerde hâlâ RAGService().answer(...) kullanıyorsan çalışmaya devam eder.
-    Yeni kod doğrudan run_rag() kullanmalı.
     """
 
     def answer(self, qr_id: str, question: str):

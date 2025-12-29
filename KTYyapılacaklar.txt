@@ -1,0 +1,10 @@
+telefon dokunmatik klavye sorunu çöz
+karakterin reselasyonu aynı kalsın sadece sağ sola pozisyonunu değiştirelim böylece kolun ekranda çıkma sorununu çözeriz sola kaydırınca
+
+resmi olmayan eşyalarda bir şey gösterme karakter ortada olsun
+
+resim olanlarda karakter sola doğru olsun 
+
+adminde eklene bir resmi düzenlerken sildiğimde gerçektede C:\Users\pc\Desktop\ai muze guide\ai-museum-guide\web\static\exhibits içden de sil resmi
+
+arka plana bakılan eseri koyma (DEVAM EDİYOR)

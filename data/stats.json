@@ -1,0 +1,130 @@
+{
+  "qr_scans": {
+    "qr_11": {
+      "count": 1,
+      "name": "Si Bemol Trompet"
+    },
+    "qr_06": {
+      "count": 2,
+      "name": "Eski Mezuniyet Cübbeleri ve Kepleri"
+    },
+    "qr_13": {
+      "count": 4,
+      "name": "Bando Kıyafeti (1986-1992)"
+    },
+    "qr_08": {
+      "count": 1,
+      "name": "Türk Marşı Orijinal Notaları (1945)"
+    },
+    "qr_09": {
+      "count": 2,
+      "name": "Ahmet Ünlü'nün El Yazması Notaları (1965)"
+    },
+    "qr_12": {
+      "count": 1,
+      "name": "1928 Yılı Okuma-Yazma Kursu İstatistikleri ve Belgeleri"
+    },
+    "qr_05": {
+      "count": 1,
+      "name": "Daktilo ve Hesap Makineleri"
+    },
+    "qr_07": {
+      "count": 1,
+      "name": "Tarihi Diplomalar ve Belgeler"
+    },
+    "qr_02": {
+      "count": 6,
+      "name": "Atatürk Anıtı (İncek Kampüsü)"
+    },
+    "qr_03": {
+      "count": 11,
+      "name": "Laboratuvar Aküsü (Eski Dönem)"
+    }
+  },
+  "questions": [
+    {
+      "text": "müzede toplam kaç eser var",
+      "time": "2025-12-26T12:34:03.558377"
+    },
+    {
+      "text": "müze ne zaman kuruldu",
+      "time": "2025-12-26T12:30:23.309726"
+    },
+    {
+      "text": "müzede Atatürk anıtı var mı",
+      "time": "2025-12-26T12:29:33.655749"
+    },
+    {
+      "text": "Atatürk anıtı adlı bir eser var mı",
+      "time": "2025-12-26T12:29:09.311177"
+    },
+    {
+      "text": "toplam kaç tane eser var müzede",
+      "time": "2025-12-26T12:28:07.947009"
+    },
+    {
+      "text": "Evet senin görevin nedir",
+      "time": "2025-12-26T12:16:11.634478"
+    },
+    {
+      "text": "Senin görevin nedir",
+      "time": "2025-12-26T12:15:45.376270"
+    },
+    {
+      "text": "kaskdas",
+      "time": "2025-12-26T12:12:05.336144"
+    },
+    {
+      "text": "merhba",
+      "time": "2025-12-26T12:11:53.229707"
+    },
+    {
+      "text": "bu eser kaç yılında yazıldı",
+      "time": "2025-12-26T12:08:38.489676"
+    },
+    {
+      "text": "yazarı kim",
+      "time": "2025-12-26T12:05:47.479200"
+    },
+    {
+      "text": "Türk Marşı'nı kim yazdı",
+      "time": "2025-12-26T12:04:43.287756"
+    },
+    {
+      "text": "Ben senin ananı avradını sikeyim",
+      "time": "2025-12-26T11:55:23.831433"
+    },
+    {
+      "text": "bende hangi eser hakında konuşacağımı bilmiyorum",
+      "time": "2025-12-26T05:59:48.991362"
+    },
+    {
+      "text": "Anlat",
+      "time": "2025-12-26T05:15:54.538509"
+    },
+    {
+      "text": "Slm",
+      "time": "2025-12-26T05:15:12.316921"
+    },
+    {
+      "text": "merhaba",
+      "time": "2025-12-26T04:56:59.816714"
+    }
+  ],
+  "daily_activity": {
+    "2025-12-26": {
+      "scans": 8,
+      "chats": 17
+    },
+    "2025-12-27": {
+      "scans": 22,
+      "chats": 0
+    }
+  },
+  "sessions": 30,
+  "unique_ips": [
+    "127.0.0.1",
+    "31.223.74.240",
+    "151.135.150.250"
+  ]
+}
