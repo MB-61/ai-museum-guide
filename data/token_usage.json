@@ -6,14 +6,14 @@
       "requests": 17
     },
     "2025-12-30": {
-      "input": 2728,
-      "output": 177,
-      "requests": 4
+      "input": 4709,
+      "output": 269,
+      "requests": 6
     }
   },
   "total": {
-    "input": 16721,
-    "output": 1383,
-    "requests": 21
+    "input": 18702,
+    "output": 1475,
+    "requests": 23
   }
 }

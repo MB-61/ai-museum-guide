@@ -47,6 +47,26 @@
   },
   "questions": [
     {
+      "text": "merhaba",
+      "time": "2025-12-31T00:30:42.877010"
+    },
+    {
+      "text": "bana müze hakkında genel bilgi verir misin",
+      "time": "2025-12-31T00:27:27.369509"
+    },
+    {
+      "text": "önce nereyi gezmeliyim",
+      "time": "2025-12-31T00:26:35.825584"
+    },
+    {
+      "text": "Asd",
+      "time": "2025-12-30T08:09:30.589263"
+    },
+    {
+      "text": "Gklpj",
+      "time": "2025-12-30T08:09:18.191736"
+    },
+    {
       "text": "Ben senin ananı avradını s******",
       "time": "2025-12-30T07:02:30.931855"
     },
@@ -150,7 +170,11 @@
     },
     "2025-12-30": {
       "scans": 22,
-      "chats": 6
+      "chats": 8
+    },
+    "2025-12-31": {
+      "scans": 0,
+      "chats": 3
     }
   },
   "sessions": 52,
