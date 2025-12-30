@@ -1,0 +1,17 @@
+Genel Mantık
+
+app/services/
+├── llm.py
+├── rag.py
+├── retriever.py
+└── prompts.py
+
+Kullanıcı sorusu
+   ↓
+retriever.py → ChromaDB'den ilgili text parçaları
+   ↓
+prompts.py → bu parçaları ve soruyu birleştirir
+   ↓
+llm.py → LLM'e gönderir (ör. Ollama, GPT, vs.)
+   ↓
+rag.py → hepsini yönetir, yanıtı döndürür
