@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    <meta
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content"
         name="viewport" />
     <title>AI Müze Rehberi - KODE-X</title>
     <meta name="description"
@@ -208,6 +209,22 @@
             pointer-events: none;
             opacity: 0.6;
             cursor: not-allowed;
+        }
+
+        /* Responsive - Desktop: center content like mobile */
+        @media (min-width: 768px) {
+            #chat-screen {
+                max-width: 480px;
+                margin: 0 auto;
+                border-left: 1px solid rgba(255, 255, 255, 0.1);
+                border-right: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            #start-screen,
+            #qr-screen {
+                max-width: 480px;
+                margin: 0 auto;
+            }
         }
     </style>
 </head>
@@ -442,7 +459,7 @@
                 </div>
 
                 <!-- Text Input Toggle -->
-                <button onclick="toggleChatInput()"
+                <button id="toggle-input-btn" onclick="toggleChatInput()"
                     class="flex items-center justify-center size-12 rounded-full glass-panel text-white hover:bg-white/10 transition-all border border-white/10">
                     <span class="material-symbols-outlined">edit_note</span>
                 </button>
@@ -552,6 +569,55 @@
             await loadGreetings();
             generateNetworkQR();
             populateTestDropdown();
+
+            // Simple keyboard handling for mobile - move input to top when focused
+            const chatInput = document.getElementById('chat-input');
+            const chatInputPanel = document.getElementById('chat-input-panel');
+            const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+            if (chatInput && chatInputPanel && isTouchDevice) {
+                chatInput.addEventListener('focus', () => {
+                    // Move input to top of screen
+                    chatInputPanel.style.position = 'fixed';
+                    chatInputPanel.style.top = '80px';
+                    chatInputPanel.style.bottom = 'auto';
+                    chatInputPanel.style.left = '16px';
+                    chatInputPanel.style.right = '16px';
+                    chatInputPanel.style.zIndex = '9999';
+                });
+
+                chatInput.addEventListener('blur', () => {
+                    setTimeout(() => {
+                        // Reset position
+                        chatInputPanel.style.cssText = '';
+                    }, 100);
+                });
+            }
+
+            // Status observer to toggle input button visibility
+            const statusElement = document.getElementById('status-floating');
+            const toggleInputBtn = document.getElementById('toggle-input-btn');
+
+            if (statusElement && toggleInputBtn) {
+                // Determine visibility based on text content
+                const updateButtonVisibility = () => {
+                    const text = statusElement.innerText.toLowerCase().trim();
+                    // Show ONLY if 'hazır' or 'durduruldu'
+                    if (text.includes('hazır') || text.includes('durduruldu')) {
+                        toggleInputBtn.style.visibility = 'visible';
+                        toggleInputBtn.style.opacity = '1';
+                    } else {
+                        toggleInputBtn.style.visibility = 'hidden';
+                        toggleInputBtn.style.opacity = '0';
+                    }
+                };
+
+                const observer = new MutationObserver(updateButtonVisibility);
+                observer.observe(statusElement, { childList: true, characterData: true, subtree: true });
+
+                // Initial check
+                setTimeout(updateButtonVisibility, 500); // Delay for initial load
+            }
         });
 
         // ========== CONFIG ==========
@@ -761,37 +827,58 @@
             const exhibitFrame = document.getElementById('exhibit-frame');
             const exhibitImage = document.getElementById('exhibit-image');
             const exhibitPlaceholder = document.getElementById('exhibit-placeholder');
+            const avatarContainer = document.getElementById('avatar-container');
 
             if (qrMode && currentExhibitTitle) {
                 modeIndicator.textContent = 'Eser Modu';
                 exhibitBadge.style.display = 'flex';
                 exhibitName.textContent = currentExhibitTitle;
 
-                // Show exhibit frame and load image
-                exhibitFrame.style.display = 'block';
-
                 // Try to load exhibit image from metadata
+                let hasImage = false;
                 try {
                     const res = await fetch(`/api/v1/qr/exhibit-image/${currentQrId}`);
                     if (res.ok) {
                         const meta = await res.json();
-                        if (meta.image) {
+                        if (meta.image && meta.image.trim() !== '') {
                             exhibitImage.src = meta.image;
                             exhibitImage.style.display = 'block';
                             exhibitPlaceholder.style.display = 'none';
-                        } else {
-                            exhibitImage.style.display = 'none';
-                            exhibitPlaceholder.style.display = 'flex';
+                            hasImage = true;
                         }
                     }
                 } catch (e) {
                     console.log('Could not load exhibit image');
-                    exhibitPlaceholder.style.display = 'flex';
+                }
+
+                // Show exhibit frame ONLY if image exists
+                if (hasImage) {
+                    exhibitFrame.style.display = 'block';
+                    // Avatar to left side - scale up and move to show torso+head
+                    avatarContainer.style.left = '0';
+                    avatarContainer.style.right = 'auto';
+                    avatarContainer.style.width = '70%';
+                    avatarContainer.style.height = '100%';
+                    avatarContainer.style.transform = 'translateX(-18%) translateY(55%) scale(1.8)';
+                } else {
+                    // No image - hide frame, center avatar
+                    exhibitFrame.style.display = 'none';
+                    avatarContainer.style.left = '50%';
+                    avatarContainer.style.right = 'auto';
+                    avatarContainer.style.width = '70%';
+                    avatarContainer.style.height = '100%';
+                    avatarContainer.style.transform = 'translateX(-50%) translateY(45%) scale(1.8)';
                 }
             } else {
                 modeIndicator.textContent = 'Genel Mod';
                 exhibitBadge.style.display = 'none';
                 exhibitFrame.style.display = 'none';
+                // Center avatar for general mode
+                avatarContainer.style.left = '50%';
+                avatarContainer.style.right = 'auto';
+                avatarContainer.style.width = '70%';
+                avatarContainer.style.height = '100%';
+                avatarContainer.style.transform = 'translateX(-50%) translateY(45%) scale(1.8)';
             }
 
             initAvatar();
@@ -807,7 +894,7 @@
                 head = new TalkingHead(nodeAvatar, {
                     ttsEndpoint: null,
                     lipsyncModules: ["en"],
-                    cameraView: "upper",
+                    cameraView: "full",
                     cameraRotateEnable: false
                 });
 
