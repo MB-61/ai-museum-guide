@@ -28,6 +28,32 @@ def get_chunk_count(question_type: QuestionType, is_exhibit_mode: bool) -> int:
         return 6   # Genel sorular için orta düzey
 
 
+def build_system_prompt(question_type: QuestionType, exhibit_name: Optional[str] = None) -> str:
+    """
+    Soru tipine ve moda göre gelişmiş system prompt oluştur.
+    """
+    base = "Sen TED Kolej Müzesi'nin deneyimli dijital rehberisin."
+    
+    # Soru tipine göre uzunluk talimatı
+    length_hints = {
+        QuestionType.SHORT: "Kısa ve öz cevap ver (1-2 cümle). Doğrudan yanıtla.",
+        QuestionType.MEDIUM: "Bilgilendirici cevap ver (2-4 cümle). Ana bilgi + kısa bağlam.",
+        QuestionType.DETAILED: "Detaylı ve zengin anlatım sun (4-7 cümle). Tarihi bağlam, önem ve ilginç detayları dahil et.",
+        QuestionType.LIST: "Liste formatında cevap ver. Her madde için kısa açıklama ekle."
+    }
+    
+    parts = [base, length_hints.get(question_type, length_hints[QuestionType.MEDIUM])]
+    
+    # Eser modu için ek bağlam
+    if exhibit_name:
+        parts.append(f"Ziyaretçi şu an '{exhibit_name}' eserinin önünde. Bu eseri önceliklendir.")
+    
+    # Genel kurallar
+    parts.append("Önceki konuşmayı dikkate al. Türkçe cevap ver. Sadece verilen bağlamdaki bilgileri kullan.")
+    
+    return " ".join(parts)
+
+
 def run_rag(
     question: str, 
     qr_id: Optional[str] = None,
@@ -87,15 +113,8 @@ def run_rag(
         exhibit_title=conv_context.current_exhibit
     )
     
-    # System prompt - soru tipine göre
-    type_hints = {
-        QuestionType.SHORT: "Kısa ve öz cevap ver (1-2 cümle).",
-        QuestionType.MEDIUM: "Bilgilendirici cevap ver (3-5 cümle).",
-        QuestionType.DETAILED: "Detaylı ve zengin anlatım sun (5+ cümle).",
-        QuestionType.LIST: "Liste formatında cevap ver."
-    }
-    
-    system = f"Sen TED Kolej Müzesi rehberisin. {type_hints.get(detected_type, '')} Önceki konuşmayı dikkate al. Türkçe cevap ver."
+    # Gelişmiş system prompt
+    system = build_system_prompt(detected_type, conv_context.current_exhibit)
 
     answer = call_llm(system_prompt=system, user_prompt=prompt)
     sources = [m.get("source") for _d, m in chunks if m and m.get("source")]
