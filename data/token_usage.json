@@ -4,11 +4,16 @@
       "input": 13993,
       "output": 1206,
       "requests": 17
+    },
+    "2025-12-30": {
+      "input": 2728,
+      "output": 177,
+      "requests": 4
     }
   },
   "total": {
-    "input": 13993,
-    "output": 1206,
-    "requests": 17
+    "input": 16721,
+    "output": 1383,
+    "requests": 21
   }
 }

@@ -1,10 +1,11 @@
-telefon dokunmatik klavye sorunu çöz
-karakterin reselasyonu aynı kalsın sadece sağ sola pozisyonunu değiştirelim böylece kolun ekranda çıkma sorununu çözeriz sola kaydırınca
+telefon dokunmatik klavye sorunu çöz (devam ediyor)
 
-resmi olmayan eşyalarda bir şey gösterme karakter ortada olsun
+ana sayfa, qr okuma, Genel mod, eser kodu için farklı htmller yap bunlar arasında gezelim bu şekilde geri gittiğimiz zaman avatardan qr yada ana sayfaya geçelim
 
-resim olanlarda karakter sola doğru olsun 
+resimli eserlerde avatar biraz daha yukarı
 
 adminde eklene bir resmi düzenlerken sildiğimde gerçektede C:\Users\pc\Desktop\ai muze guide\ai-museum-guide\web\static\exhibits içden de sil resmi
 
-arka plana bakılan eseri koyma (DEVAM EDİYOR)
+Ana sayfadaki karşılama yazılarını falan admin panalden değiştirebilelim
+
+yeni büyük özellik genel modda bütün eserlerden yararlanıyor ama toplam kaç eser var gibi soruları cevaplamsı için bir sistem ve admin panelden müzenin genel özellikleri ilgili bir yazı ekleyelim oradanda yararlansın genel modda
