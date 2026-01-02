@@ -151,8 +151,23 @@
         <!-- Status Text -->
         <div class="flex-1 relative z-10 flex flex-col items-center justify-center pointer-events-none">
             <div id="status-floating" class="mt-auto mb-10 px-6 text-center">
-                <p id="status-text" class="text-white/80 text-lg font-medium text-shadow animate-float">Hazır</p>
+                <p id="status-text" class="text-white/80 text-lg font-medium text-shadow animate-float">Yükleniyor...
+                </p>
             </div>
+        </div>
+
+        <!-- Start Overlay -->
+        <div id="start-overlay"
+            class="absolute inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300"
+            style="display: none;">
+            <button onclick="startExperience()"
+                class="group relative px-8 py-4 bg-primary hover:bg-blue-600 text-white text-xl font-bold rounded-full shadow-lg hover:shadow-primary/50 transition-all transform hover:scale-105 active:scale-95">
+                <span class="relative z-10 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-3xl">play_circle</span>
+                    Sohbete Başla
+                </span>
+                <div class="absolute inset-0 rounded-full bg-white/20 animate-pulse"></div>
+            </button>
         </div>
 
         <!-- Messages Container -->
@@ -334,7 +349,7 @@
                         avatarContainer.style.right = 'auto';
                         avatarContainer.style.width = '70%';
                         avatarContainer.style.height = '100%';
-                        avatarContainer.style.transform = 'translateX(-18%) translateY(55%) scale(1.8)';
+                        avatarContainer.style.transform = 'translateX(-18%) translateY(40%) scale(1.8)';
                     } else {
                         throw new Error('No image');
                     }
@@ -412,10 +427,12 @@
                 setStatus('Hazır');
                 showToast('Avatar hazır', 'success');
 
-                // Speak random greeting
-                const greeting = getRandomGreeting(qrMode, currentExhibitTitle);
-                addSystemMessage(greeting);
-                setTimeout(() => speakWithAvatar(greeting), 500);
+                // Show Start Overlay instead of auto-speaking
+                document.getElementById('start-overlay').style.display = 'flex';
+                setStatus('Başlamak için dokunun');
+
+                // Pre-calculate greeting but don't speak yet
+                window.pendingGreeting = getRandomGreeting(qrMode, currentExhibitTitle);
 
             } catch (err) {
                 console.error('Avatar load error:', err);
@@ -423,6 +440,22 @@
                 showToast('Avatar yüklenemedi', 'error');
             }
         }
+
+        window.startExperience = async function () {
+            const overlay = document.getElementById('start-overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.style.display = 'none', 300);
+
+            // Unlock Audio Context
+            await initAudioContext();
+
+            // Speak Pending Greeting
+            if (window.pendingGreeting) {
+                addSystemMessage(window.pendingGreeting);
+                speakWithAvatar(window.pendingGreeting);
+                window.pendingGreeting = null;
+            }
+        };
 
         // ========== AUDIO & LIP SYNC ==========
         async function initAudioContext() {
@@ -456,7 +489,7 @@
             });
         }
 
-        window.stopSpeech = function () {
+        window.stopSpeech = function (silent = false) {
             if (currentAudioSource) {
                 try { currentAudioSource.stop(); } catch (e) { }
                 currentAudioSource = null;
@@ -479,7 +512,10 @@
             document.getElementById('chat-input').disabled = false;
             document.getElementById('chat-input').placeholder = 'Mesajınızı yazın...';
             document.getElementById('send-btn').disabled = false;
-            showToast('Konuşma durduruldu', 'info');
+
+            if (!silent) {
+                showToast('Konuşma durduruldu', 'info');
+            }
         };
 
         function setVisemeSmooth(targetViseme, targetIntensity, lerpSpeed = 0.35) {
@@ -555,6 +591,9 @@
         }
 
         async function speakWithAvatar(text) {
+            // STOP any existing speech immediately to prevent overlap (silent mode)
+            stopSpeech(true);
+
             if (!AZURE_KEY || AZURE_KEY === 'YOUR_AZURE_SPEECH_KEY_HERE') {
                 showToast('Azure API anahtarı gerekli', 'error');
                 setStatus('API anahtarı eksik');
@@ -573,6 +612,10 @@
 
             document.getElementById('mic-pulse-1').classList.add('opacity-0');
             document.getElementById('mic-pulse-2').classList.add('opacity-0');
+
+            // Force hide input panel
+            const inputPanel = document.getElementById('chat-input-panel');
+            if (inputPanel) inputPanel.style.display = 'none';
 
             document.getElementById('chat-input').disabled = true;
             document.getElementById('chat-input').placeholder = 'AI konuşuyor...';
@@ -653,6 +696,7 @@
             addMessage(question, 'user');
             input.value = '';
             document.getElementById('chat-input-panel').style.display = 'none';
+            input.blur(); // Dismiss mobile keyboard
             showMessagesPanel();
             setStatus('Düşünüyor...');
 

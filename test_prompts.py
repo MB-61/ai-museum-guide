@@ -5,7 +5,9 @@ Test 2: Sayısal / Tarih / Hassas Veri Soruları
 Amaç: Sayıları "düzeltmeye" çalışıyor mu?
 """
 import sys
-sys.path.insert(0, '/Users/mb/Documents/GitHub/ai-museum-guide')
+import os
+sys.path.insert(0, os.getcwd())
+sys.stdout.reconfigure(encoding='utf-8')
 
 from app.services.prompts import detect_question_type, QuestionType, build_adaptive_prompt, BASE_PERSONA
 

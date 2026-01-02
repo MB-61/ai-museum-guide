@@ -11,14 +11,14 @@
       "requests": 6
     },
     "2026-01-02": {
-      "input": 7162,
-      "output": 838,
-      "requests": 8
+      "input": 36385,
+      "output": 3280,
+      "requests": 37
     }
   },
   "total": {
-    "input": 25864,
-    "output": 2313,
-    "requests": 31
+    "input": 55087,
+    "output": 4755,
+    "requests": 60
   }
 }

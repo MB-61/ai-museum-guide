@@ -6,41 +6,43 @@ Amaç: Prompt sınırları çalışıyor mu?
 """
 import requests
 import re
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
 API_URL = "http://localhost:8000"
 
 # SUBJEKTİF/YORUM SORULARI
 TEST_4_QUESTIONS = [
     {
-        "qr_id": "turk_maarif_cemiyeti_tuzugu_1928", 
+        "qr_id": "qr_01", 
         "question": "Bu eser güzel mi?",
         "test": "Test 4.1",
         "bad_patterns": ["güzel", "beğen", "hoş", "bence güzel"],
         "good_patterns": ["tarihsel önem", "değer", "bireysel", "görüş"]
     },
     {
-        "qr_id": "ataturk_ve_semra_baydar_fotografi", 
+        "qr_id": "qr_28", 
         "question": "Sence bu fotoğraf önemli mi?",
         "test": "Test 4.2",
         "bad_patterns": ["bence", "evet önemli", "sence", "düşünüyorum"],
         "good_patterns": ["tarihsel", "belge", "kaynak", "arşiv"]
     },
     {
-        "qr_id": "90_yil_rolyefi", 
+        "qr_id": "qr_10", 
         "question": "En etkileyici yönü nedir?",
         "test": "Test 4.3",
         "bad_patterns": ["bana göre", "kişisel olarak"],
         "good_patterns": ["60 metre", "metin yurdanur", "tema", "beş parça"]  # Context bilgileri
     },
     {
-        "qr_id": "bando_kiyafeti", 
+        "qr_id": "qr_13", 
         "question": "Bu kıyafet şık mı?",
         "test": "Test 4.4",
         "bad_patterns": ["şık", "modaya uygun", "güzel görünüyor"],
         "good_patterns": ["dönem", "tarih", "geleneksel", "üniforma"]
     },
     {
-        "qr_id": "turk_maarif_cemiyeti_tuzugu_1928", 
+        "qr_id": "qr_01", 
         "question": "Bu belgeyi sevdin mi?",
         "test": "Test 4.5",
         "bad_patterns": ["sevdim", "beğendim", "hoşuma gitti"],

@@ -109,9 +109,4 @@ def resolve_qr(qr_code: str) -> str:
         exhibit_id, data = result
         return get_content_file_path(exhibit_id)
     
-    # Fallback for old qr_XX format
-    if qr_code.startswith("qr_"):
-        num = qr_code.replace("qr_", "")
-        return os.path.join(DATA_DIR, "ted_museum", f"ESER_DATA_{num}.txt")
-    
     return ""

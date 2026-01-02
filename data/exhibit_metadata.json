@@ -17,14 +17,14 @@
       "title": "Türk Maarif Cemiyeti Tüzüğü (1928)",
       "qr": "qr_01",
       "category": "",
-      "image": "",
+      "image": "/static/exhibits/FOTO_01.png",
       "content_file": "ESER_DATA_01.txt"
     },
     "ID_02": {
       "title": "Atatürk Anıtı (İncek Kampüsü)",
       "qr": "qr_02",
       "category": "Fotoğraf",
-      "image": "",
+      "image": "/static/exhibits/FOTO_02.png",
       "content_file": "ESER_DATA_02.txt"
     },
     "ID_03": {
@@ -52,7 +52,7 @@
       "title": "Eski Mezuniyet Cübbeleri ve Kepleri",
       "qr": "qr_06",
       "category": "Kıyafet/Üniforma",
-      "image": "",
+      "image": "/static/exhibits/FOTO_06.png",
       "content_file": "ESER_DATA_06.txt"
     },
     "ID_07": {
@@ -73,14 +73,14 @@
       "title": "Ahmet Ünlü'nün El Yazması Notaları (1965)",
       "qr": "qr_09",
       "category": "Belge",
-      "image": "",
+      "image": "/static/exhibits/FOTO_09.png",
       "content_file": "ESER_DATA_09.txt"
     },
     "ID_10": {
       "title": "90. Yıl Rölyefi (Dijital Replikası)",
       "qr": "qr_10",
       "category": "Diğer",
-      "image": "",
+      "image": "/static/exhibits/FOTO_10.png",
       "content_file": "ESER_DATA_10.txt"
     },
     "ID_11": {
@@ -94,7 +94,7 @@
       "title": "1928 Yılı Okuma-Yazma Kursu İstatistikleri ve Belgeleri",
       "qr": "qr_12",
       "category": "Belge",
-      "image": "",
+      "image": "/static/exhibits/FOTO_12.png",
       "content_file": "ESER_DATA_12.txt"
     },
     "ID_13": {
@@ -115,28 +115,28 @@
       "title": "TED Ankara Koleji Marşı Kaydı ve Sözleri",
       "qr": "qr_15",
       "category": "Belge",
-      "image": "",
+      "image": "/static/exhibits/FOTO_15.png",
       "content_file": "ESER_DATA_15.txt"
     },
     "ID_16": {
       "title": "1972-73 Türkiye Basketbol Kupası",
       "qr": "qr_16",
       "category": "Kupa/Ödül",
-      "image": "",
+      "image": "/static/exhibits/FOTO_16.png",
       "content_file": "ESER_DATA_16.txt"
     },
     "ID_17": {
       "title": "1957-1958 Okul Spor Yurtları Kız Voleybol Birincilik Kupası",
       "qr": "qr_17",
       "category": "Kupa/Ödül",
-      "image": "",
+      "image": "/static/exhibits/FOTO_17.png",
       "content_file": "ESER_DATA_17.txt"
     },
     "ID_18": {
       "title": "1983-1984 Liseler Kız Basketbol Dünya İkinciliği Kupası",
       "qr": "qr_18",
       "category": "Kupa/Ödül",
-      "image": "",
+      "image": "/static/exhibits/FOTO_18.png",
       "content_file": "ESER_DATA_18.txt"
     },
     "ID_19": {
@@ -150,7 +150,7 @@
       "title": "1984-1985 Lise Gençler Türkiye Basketbol Birinciliği Kupası",
       "qr": "qr_20",
       "category": "Kupa/Ödül",
-      "image": "",
+      "image": "/static/exhibits/FOTO_20.png",
       "content_file": "ESER_DATA_20.txt"
     },
     "ID_21": {
@@ -164,7 +164,7 @@
       "title": "Retro/Vintage \"Kolejliler\" Forması",
       "qr": "qr_22",
       "category": "Kıyafet/Üniforma",
-      "image": "",
+      "image": "/static/exhibits/FOTO_22.png",
       "content_file": "ESER_DATA_22.txt"
     },
     "ID_23": {
@@ -178,7 +178,7 @@
       "title": "Dilek Bağı Dergisi - 1. Sayı (1930)",
       "qr": "qr_24",
       "category": "Dergi/Yayın",
-      "image": "",
+      "image": "/static/exhibits/FOTO_24.png",
       "content_file": "ESER_DATA_24.txt"
     },
     "ID_25": {
@@ -199,35 +199,35 @@
       "title": "1933 Tarihli Okul Flaması",
       "qr": "qr_27",
       "category": "Bayrak/Flama",
-      "image": "",
+      "image": "/static/exhibits/FOTO_27.png",
       "content_file": "ESER_DATA_27.txt"
     },
     "ID_28": {
       "title": "Atatürk ve Semra Baydar Fotoğrafı (19 Mayıs 1938)",
       "qr": "qr_28",
       "category": "Fotoğraf",
-      "image": "",
+      "image": "/static/exhibits/FOTO_28.png",
       "content_file": "ESER_DATA_28.txt"
     },
     "ID_29": {
       "title": "İlk Kolej Binası Fotoğrafı ve Mimari Çizimleri (1937)",
       "qr": "qr_29",
       "category": "Fotoğraf",
-      "image": "",
+      "image": "/static/exhibits/FOTO_29.png",
       "content_file": "ESER_DATA_29.txt"
     },
     "ID_30": {
       "title": "Ziya Gökalp Yerleşkesi Maketi",
       "qr": "qr_30",
       "category": "Maket/Model",
-      "image": "",
+      "image": "/static/exhibits/FOTO_30.png",
       "content_file": "ESER_DATA_30.txt"
     },
     "ID_31": {
       "title": "Okul Zili (Ziya Gökalp Dönemi)",
       "qr": "qr_31",
       "category": "Eğitim Eşyası",
-      "image": "",
+      "image": "/static/exhibits/FOTO_31.png",
       "content_file": "ESER_DATA_31.txt"
     }
   }

@@ -47,6 +47,122 @@
   },
   "questions": [
     {
+      "text": "Ne işe yarar",
+      "time": "2026-01-02T09:45:39.327503"
+    },
+    {
+      "text": "Tabi",
+      "time": "2026-01-02T09:42:58.438016"
+    },
+    {
+      "text": "Merhaba",
+      "time": "2026-01-02T09:42:26.513308"
+    },
+    {
+      "text": "Kdkkd",
+      "time": "2026-01-02T09:35:13.086510"
+    },
+    {
+      "text": "Slm",
+      "time": "2026-01-02T09:27:40.716126"
+    },
+    {
+      "text": "Bu kaç yılının diplomaları",
+      "time": "2026-01-02T09:23:52.874089"
+    },
+    {
+      "text": "daka kısa açıkla",
+      "time": "2026-01-02T09:21:31.915103"
+    },
+    {
+      "text": "bu eser nedir",
+      "time": "2026-01-02T09:21:06.562550"
+    },
+    {
+      "text": "Bu belgede uzaylılardan bahsediliyor mu?",
+      "time": "2026-01-02T09:18:44.129739"
+    },
+    {
+      "text": "Bu eserdeki önemli figürleri maddeler halinde say.",
+      "time": "2026-01-02T09:18:39.249930"
+    },
+    {
+      "text": "Sence önümüzdeki seçimleri kim kazanır?",
+      "time": "2026-01-02T09:18:35.362939"
+    },
+    {
+      "text": "Peki bunu kim yaptı?",
+      "time": "2026-01-02T09:18:30.700226"
+    },
+    {
+      "text": "Bu anıt hakkında bilgi ver.",
+      "time": "2026-01-02T09:18:00.343396"
+    },
+    {
+      "text": "Bu belgede uzaylılardan bahsediliyor mu?",
+      "time": "2026-01-02T09:14:59.237444"
+    },
+    {
+      "text": "Bu eserdeki önemli figürleri maddeler halinde say.",
+      "time": "2026-01-02T09:14:53.199172"
+    },
+    {
+      "text": "Sence önümüzdeki seçimleri kim kazanır?",
+      "time": "2026-01-02T09:14:29.847188"
+    },
+    {
+      "text": "Peki bunu kim yaptı?",
+      "time": "2026-01-02T09:14:22.694937"
+    },
+    {
+      "text": "Bu anıt hakkında bilgi ver.",
+      "time": "2026-01-02T09:14:11.707909"
+    },
+    {
+      "text": "Bu eserin konusu ne?",
+      "time": "2026-01-02T09:10:31.281258"
+    },
+    {
+      "text": "Kaç yılında yapıldı?",
+      "time": "2026-01-02T09:10:26.528702"
+    },
+    {
+      "text": "Bu nedir?",
+      "time": "2026-01-02T09:10:15.056215"
+    },
+    {
+      "text": "Bu eserin konusu ne?",
+      "time": "2026-01-02T09:09:26.635110"
+    },
+    {
+      "text": "Kaç yılında yapıldı?",
+      "time": "2026-01-02T09:09:16.015246"
+    },
+    {
+      "text": "Bu nedir?",
+      "time": "2026-01-02T09:09:05.747425"
+    },
+    {
+      "text": "Bu belgeyi sevdin mi?",
+      "time": "2026-01-02T09:02:43.206971"
+    },
+    {
+      "text": "Bu kıyafet şık mı?",
+      "time": "2026-01-02T09:02:35.989743"
+    },
+    {
+      "text": "En etkileyici yönü nedir?",
+      "time": "2026-01-02T09:02:28.324857"
+    },
+    {
+      "text": "Sence bu fotoğraf önemli mi?",
+      "time": "2026-01-02T09:02:21.326441"
+    },
+    {
+      "text": "Bu eser güzel mi?",
+      "time": "2026-01-02T09:02:06.853246"
+    },
+    {
       "text": "benim adım ne",
       "time": "2026-01-02T08:43:38.815219"
     },
@@ -214,7 +330,7 @@
     },
     "2026-01-02": {
       "scans": 0,
-      "chats": 9
+      "chats": 38
     }
   },
   "sessions": 53,

@@ -33,16 +33,14 @@ def lookup_exhibit(qr_code: str) -> QRLookupResponse:
         image = metadata.get("image", "")
         content_file = metadata.get("content_file", "")
     else:
-        # Fallback for old qr_XX format - try to map to ID_XX
-        if qr_code.startswith("qr_"):
-            num = qr_code.replace("qr_", "")
-            exhibit_id = f"ID_{num}"
-        else:
-            exhibit_id = qr_code
-        title = exhibit_id
-        category = ""
-        image = ""
-        content_file = ""
+        # QR code not found in metadata
+        return QRLookupResponse(
+            exhibit_id="UNKNOWN",
+            title="Bilinmeyen Eser",
+            summary="Bu QR kod sistemde tanımlı değil.",
+            image=None,
+            metadata={}
+        )
     
     # Get content file path
     content_path = get_content_file_path(exhibit_id)
