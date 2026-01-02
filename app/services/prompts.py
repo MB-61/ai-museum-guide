@@ -99,11 +99,61 @@ CEVAP FORMATI: LİSTE
 }
 
 
+def is_museum_stats_question(question: str) -> bool:
+    """
+    Müze istatistik sorusu mu kontrol et.
+    Örn: "Müzede kaç eser var?", "Toplam eser sayısı nedir?"
+    """
+    q = question.lower().strip()
+    stats_patterns = [
+        r'\bkaç\s+eser\b',
+        r'\bkaç\s+tane\s+eser\b',
+        r'\beser\s+sayısı\b',
+        r'\btoplam\s+eser\b',
+        r'\bmüzede\s+kaç\b',
+        r'\bkaç\s+parça\b',
+        r'\bkoleksiyon.*kaç\b',
+        r'\bsergi.*kaç\b',
+    ]
+    for pattern in stats_patterns:
+        if re.search(pattern, q):
+            return True
+    return False
+
+
+def is_museum_overview_question(question: str) -> bool:
+    """
+    Müze hakkında genel bilgi sorusu mu kontrol et.
+    Örn: "Müze hakkında bilgi ver", "Bu müze nedir?"
+    """
+    q = question.lower().strip()
+    overview_patterns = [
+        r'\bmüze\s+hakkında\b',
+        r'\bmüze\s+nedir\b',
+        r'\bbu\s+müze\b',
+        r'\bmüzenin\s+hikaye\b',
+        r'\bmüzenin\s+tarih',  # tarih, tarihçe, tarihçesi
+        r'\bgenel\s+bilgi\b',
+        r'\bmüzeyi\s+tanıt\b',
+        r'\bmüze\s+özet\b',
+        r'\bted\s+müzesi\s+nedir\b',
+        r'\bkolej\s+müzesi\s+hakkında\b',
+    ]
+    for pattern in overview_patterns:
+        if re.search(pattern, q):
+            return True
+    return False
+
+
 def detect_question_type(question: str) -> QuestionType:
     """
     Sorunun tipini algıla ve uygun cevap stratejisini belirle.
     """
     q = question.lower().strip()
+    
+    # Müze istatistik soruları -> KISA cevap
+    if is_museum_stats_question(question):
+        return QuestionType.SHORT
     
     # Liste soruları
     list_patterns = [

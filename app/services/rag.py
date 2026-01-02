@@ -10,9 +10,12 @@ from app.services.retriever import retrieve
 from app.services.prompts import (
     build_adaptive_prompt,
     detect_question_type,
+    is_museum_stats_question,
+    is_museum_overview_question,
     QuestionType
 )
 from app.services.memory_service import enhance_question_with_context
+from app.services.exhibit_info_service import get_exhibit_stats_context, get_museum_info_context
 from app.utils.ids import resolve_qr
 
 
@@ -89,6 +92,16 @@ def run_rag(
         full_context = f"{history_context}\n\n---\n\nİLGİLİ BİLGİLER:\n{rag_context}"
     else:
         full_context = rag_context
+    
+    # Müze istatistik sorusu ise, eser sayısı bilgisini context'e ekle
+    if is_museum_stats_question(enhanced_question):
+        stats_context = get_exhibit_stats_context()
+        full_context = f"{stats_context}\n\n---\n\n{full_context}"
+    
+    # Müze genel bilgi sorusu ise, müze özetini context'e ekle
+    if is_museum_overview_question(enhanced_question):
+        museum_context = get_museum_info_context()
+        full_context = f"{museum_context}\n\n---\n\n{full_context}"
 
     # Adaptif prompt oluştur
     prompt, detected_type = build_adaptive_prompt(
