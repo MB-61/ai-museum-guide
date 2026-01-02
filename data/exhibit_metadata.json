@@ -222,13 +222,6 @@
       "category": "Maket/Model",
       "image": "/static/exhibits/FOTO_30.png",
       "content_file": "ESER_DATA_30.txt"
-    },
-    "ID_31": {
-      "title": "Okul Zili (Ziya Gökalp Dönemi)",
-      "qr": "qr_31",
-      "category": "Eğitim Eşyası",
-      "image": "/static/exhibits/FOTO_31.png",
-      "content_file": "ESER_DATA_31.txt"
     }
   }
 }

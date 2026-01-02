@@ -800,6 +800,9 @@
 
             let finalTranscript = '';
 
+            // Assign to window for reset access (semi-global)
+            window.resetTranscript = () => { finalTranscript = ''; };
+
             recognition.onresult = (event) => {
                 if (silenceTimer) {
                     clearTimeout(silenceTimer);
@@ -864,6 +867,9 @@
 
         function startListening() {
             if (!recognition || isListening || isSpeaking) return;
+
+            // Reset transcript state from previous session
+            if (window.resetTranscript) window.resetTranscript();
 
             isListening = true;
             setStatus('Dinliyor...');

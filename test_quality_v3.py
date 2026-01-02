@@ -161,6 +161,30 @@ class GuideTesterV3:
             }
         )
 
+        # --- SCENARIO 5: SPECIAL CONTENT (STATS & OVERVIEW) ---
+        # Verifies the new RAG capabilities for museum stats and overview.
+        self.session_history = []
+        self.evaluate_turn(
+            "Stats Query (System Metadata)",
+            "qr_01",
+            "Müzede toplam kaç eser var?",
+            {
+                "Numeric Check": lambda a: (any(c.isdigit() for c in a), "Contains number"),
+                "Context Recall": lambda a: ("31" in a or "30" in a or "32" in a, "Accurate count (approx 31)")
+            }
+        )
+        
+        self.session_history = []
+        self.evaluate_turn(
+            "Overview Query (Museum Info)",
+            "qr_01",
+            "Müze hakkında genel bilgi ver.",
+            {
+                "Key Terms": lambda a: ("TED" in a and "Türk Eğitim Derneği" in a, "Mentions TED/Foundation"),
+                "Content": lambda a: ("eğitim" in a.lower() or "tarih" in a.lower(), "Relevant content")
+            }
+        )
+
         print("="*60)
         print(f"🏆 FINAL SCORE: {max(0, self.total_score)}/100")
         
