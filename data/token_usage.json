@@ -9,11 +9,16 @@
       "input": 4709,
       "output": 269,
       "requests": 6
+    },
+    "2026-01-02": {
+      "input": 7162,
+      "output": 838,
+      "requests": 8
     }
   },
   "total": {
-    "input": 18702,
-    "output": 1475,
-    "requests": 23
+    "input": 25864,
+    "output": 2313,
+    "requests": 31
   }
 }

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html class="dark" lang="tr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+        name="viewport" />
+    <title>QR Tara - AI Müze Rehberi</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png" />
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                        "surface-dark": "#1a2230",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                },
+            },
+        }
+    </script>
+
+    <!-- QR Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body class="bg-black text-white font-display overflow-hidden select-none">
+
+    <!-- QR Scanner Screen -->
+    <div class="flex flex-col h-screen w-full relative overflow-hidden page-transition">
+
+        <!-- Camera - html5-qrcode handles everything -->
+        <div id="qr-reader" class="absolute inset-0 z-0"></div>
+
+        <!-- Header with Test Select -->
+        <header class="absolute top-0 left-0 right-0 z-30 pt-3 px-3 flex items-center justify-between">
+            <!-- Close Button - Left Side -->
+            <a href="index.html"
+                class="glass-panel flex size-10 items-center justify-center rounded-full text-white active:scale-95 no-underline">
+                <span class="material-symbols-outlined text-xl">close</span>
+            </a>
+
+            <!-- Title -->
+            <div class="glass-panel px-3 py-1 rounded-full flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-primary text-sm">qr_code_scanner</span>
+                <span class="text-xs font-bold uppercase">QR Tara</span>
+            </div>
+
+            <!-- Test Select - Right Side -->
+            <div class="glass-panel px-2 py-1 rounded-lg flex items-center gap-1">
+                <span class="material-symbols-outlined text-primary text-sm">science</span>
+                <select id="qr-test-select"
+                    class="bg-transparent text-white text-xs border-none focus:ring-0 cursor-pointer max-w-[100px]">
+                    <option value="" class="bg-background-dark">Test</option>
+                </select>
+            </div>
+        </header>
+
+        <!-- Bottom Info -->
+        <div
+            class="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-black via-black/80 to-transparent pt-4 pb-16 px-4">
+            <p class="text-white text-center text-base font-medium">QR Kodu Okutun</p>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast"
+        class="fixed top-6 left-1/2 -translate-x-1/2 z-50 glass-panel px-6 py-3 rounded-full flex items-center gap-3 opacity-0 transition-all duration-300 -translate-y-4">
+        <span id="toast-icon" class="material-symbols-outlined text-primary">check_circle</span>
+        <span id="toast-message" class="text-sm font-medium">Mesaj</span>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        let html5QrCode = null;
+
+        // Populate test dropdown
+        function populateTestDropdown() {
+            const select = document.getElementById('qr-test-select');
+            if (!select) return;
+
+            for (let i = 1; i <= 31; i++) {
+                const num = i.toString().padStart(2, '0');
+                const option = document.createElement('option');
+                option.value = `qr_${num}`;
+                option.textContent = `QR ${num}`;
+                option.className = 'bg-slate-900';
+                select.appendChild(option);
+            }
+        }
+
+        // Initialize QR Scanner
+        async function initQRScanner() {
+            const qrReader = document.getElementById('qr-reader');
+            if (!qrReader) return;
+
+            try {
+                html5QrCode = new Html5Qrcode("qr-reader");
+
+                const config = {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: window.innerHeight / window.innerWidth,
+                    showTorchButtonIfSupported: true,
+                    showZoomSliderIfSupported: false,
+                    defaultZoomValueIfSupported: 2,
+                    formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+                };
+
+                await html5QrCode.start(
+                    { facingMode: "environment" },
+                    config,
+                    (decodedText) => {
+                        console.log('QR found:', decodedText);
+                        stopQRScanner();
+                        handleQRSuccess(decodedText);
+                    },
+                    (errorMessage) => {
+                        // QR kod bulunamadı, normal devam
+                    }
+                );
+            } catch (err) {
+                console.error('QR Scanner error:', err);
+            }
+        }
+
+        // Stop QR Scanner
+        function stopQRScanner() {
+            if (html5QrCode) {
+                html5QrCode.stop().catch(err => {
+                    console.log('QR stop error:', err);
+                });
+                html5QrCode = null;
+            }
+        }
+
+        // Parse QR code content
+        function parseQRCode(content) {
+            const match = content.match(/qr_(\d+)/i);
+            if (match) {
+                return `qr_${match[1].padStart(2, '0')}`;
+            }
+            return null;
+        }
+
+        // Handle successful QR scan
+        function handleQRSuccess(decodedText) {
+            const qrId = parseQRCode(decodedText);
+            if (qrId) {
+                window.location.href = `chat.html?mode=qr&qr_id=${qrId}`;
+            }
+        }
+
+        // Test dropdown handler - called when select changes
+        function autoTestQR(value) {
+            if (value) {
+                console.log('Test QR selected:', value);
+                stopQRScanner();
+                window.location.href = `chat.html?mode=qr&qr_id=${value}`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            populateTestDropdown();
+            initQRScanner();
+
+            // Setup test select change handler
+            const testSelect = document.getElementById('qr-test-select');
+            if (testSelect) {
+                testSelect.addEventListener('change', (e) => {
+                    autoTestQR(e.target.value);
+                });
+            }
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            stopQRScanner();
+        });
+    </script>
+</body>
+
+</html>

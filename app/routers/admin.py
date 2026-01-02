@@ -11,7 +11,7 @@ from fastapi import APIRouter, HTTPException, Depends, Header, UploadFile, File
 from pydantic import BaseModel
 
 from app.services import token_tracker, stats_service
-from app.services.key_rotation import get_key_status, GEMINI_API_KEYS
+from app.services.key_rotation import get_key_status, get_recent_errors, GEMINI_API_KEYS
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -77,24 +77,63 @@ async def logout(authorized: bool = Depends(verify_token), authorization: str = 
 
 # ========== DASHBOARD ==========
 @router.get("/dashboard")
-async def get_dashboard(authorized: bool = Depends(verify_token)):
-    """Get dashboard overview."""
+async def get_dashboard(period: str = "today", authorized: bool = Depends(verify_token)):
+    """Get dashboard overview for specified period (today, week, month, year, all)."""
     stats = stats_service.get_stats()
     tokens = token_tracker.get_token_stats()
+    daily_activity = stats.get("daily_history", {})
+    daily_tokens = tokens.get("daily_history", {})
     
-    # Calculate today's cost
-    today_input = tokens["today"]["input"]
-    today_output = tokens["today"]["output"]
-    today_cost = round((today_input * 0.00000015 + today_output * 0.0000006), 4)
+    from datetime import date, timedelta
+    today = date.today()
+    
+    # Calculate date ranges
+    if period == "today":
+        start_date = today
+    elif period == "week":
+        start_date = today - timedelta(days=7)
+    elif period == "month":
+        start_date = today - timedelta(days=30)
+    elif period == "year":
+        start_date = today - timedelta(days=365)
+    else:  # all
+        start_date = date(2000, 1, 1)
+    
+    # Sum stats for the period
+    period_scans = 0
+    period_chats = 0
+    period_input = 0
+    period_output = 0
+    
+    for date_str, activity in daily_activity.items():
+        try:
+            d = date.fromisoformat(date_str)
+            if d >= start_date:
+                period_scans += activity.get("scans", 0)
+                period_chats += activity.get("chats", 0)
+        except:
+            pass
+    
+    for date_str, tok in daily_tokens.items():
+        try:
+            d = date.fromisoformat(date_str)
+            if d >= start_date:
+                period_input += tok.get("input", 0)
+                period_output += tok.get("output", 0)
+        except:
+            pass
+    
+    period_tokens = period_input + period_output
+    period_cost = round((period_input * 0.00000015 + period_output * 0.0000006), 4)
     
     return {
-        "today_scans": stats["today"]["scans"],
-        "today_chats": stats["today"]["chats"],
+        "today_scans": period_scans,
+        "today_chats": period_chats,
         "total_sessions": stats["total_sessions"],
         "unique_visitors": stats.get("unique_visitors", 0),
         "total_tokens": tokens["total"]["input"] + tokens["total"]["output"],
-        "today_tokens": tokens["today"]["input"] + tokens["today"]["output"],
-        "today_cost": today_cost,
+        "today_tokens": period_tokens,
+        "today_cost": period_cost,
         "total_cost": tokens["estimated_cost_usd"],
         "api_keys_count": len(GEMINI_API_KEYS) if GEMINI_API_KEYS else 0
     }
@@ -169,20 +208,21 @@ async def reset_all_stats(authorized: bool = Depends(verify_token)):
 async def get_api_keys(authorized: bool = Depends(verify_token)):
     """Get API key status."""
     status = get_key_status()
-    # Mask keys for security
-    masked_keys = []
-    for i, key_info in enumerate(status.get("keys", [])):
-        masked_keys.append({
-            "index": i,
-            "key_preview": key_info.get("key", "")[:8] + "..." if key_info.get("key") else "N/A",
-            "status": key_info.get("status", "unknown"),
-            "last_used": key_info.get("last_used")
-        })
-    
     return {
         "current_index": status.get("current_index", 0),
-        "total_keys": len(GEMINI_API_KEYS) if GEMINI_API_KEYS else 0,
-        "keys": masked_keys
+        "total_keys": status.get("total_keys", 0),
+        "timeout": status.get("timeout", 15),
+        "keys": status.get("keys", [])
+    }
+
+
+@router.get("/api-errors")
+async def get_api_errors(authorized: bool = Depends(verify_token)):
+    """Get recent API error logs."""
+    errors = get_recent_errors(50)
+    return {
+        "total": len(errors),
+        "errors": [e.strip() for e in errors]
     }
 
 
@@ -278,124 +318,179 @@ async def delete_exhibit(qr_id: str, authorized: bool = Depends(verify_token)):
 
 # ========== RAG EXHIBITS (ted_museum folder) ==========
 TED_MUSEUM_DIR = os.path.join(DATA_DIR, "ted_museum")
-QR_MAPPING_FILE = os.path.join(DATA_DIR, "mappings", "qr_to_exhibit.json")
+METADATA_FILE = os.path.join(DATA_DIR, "exhibit_metadata.json")
+EXHIBITS_IMG_DIR = os.path.join(WEB_DIR, "static", "exhibits")
 
 
-def _load_qr_mapping():
-    """Load QR to exhibit mapping."""
+def _load_exhibit_metadata():
+    """Load exhibit metadata."""
     try:
-        with open(QR_MAPPING_FILE, "r", encoding="utf-8") as f:
+        with open(METADATA_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     except:
-        return {}
+        return {"categories": [], "exhibits": {}}
 
 
-def _save_qr_mapping(mapping):
-    """Save QR to exhibit mapping."""
-    os.makedirs(os.path.dirname(QR_MAPPING_FILE), exist_ok=True)
-    with open(QR_MAPPING_FILE, "w", encoding="utf-8") as f:
-        json.dump(mapping, f, indent=2, ensure_ascii=False)
+def _save_exhibit_metadata(data):
+    """Save exhibit metadata."""
+    with open(METADATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+
+def _get_next_id() -> str:
+    """Get next available exhibit ID, filling gaps first."""
+    metadata = _load_exhibit_metadata()
+    exhibits = metadata.get("exhibits", {})
+    
+    # Extract existing numbers
+    existing_nums = set()
+    for exhibit_id in exhibits.keys():
+        if exhibit_id.startswith("ID_"):
+            try:
+                num = int(exhibit_id.replace("ID_", ""))
+                existing_nums.add(num)
+            except:
+                pass
+    
+    if not existing_nums:
+        return "ID_01"
+    
+    # Find first gap
+    max_num = max(existing_nums)
+    for i in range(1, max_num + 2):
+        if i not in existing_nums:
+            return f"ID_{str(i).zfill(2)}"
+    
+    return f"ID_{str(max_num + 1).zfill(2)}"
+
+
+def _id_to_num(exhibit_id: str) -> str:
+    """Extract number from ID_XX -> XX."""
+    return exhibit_id.replace("ID_", "") if exhibit_id.startswith("ID_") else exhibit_id
 
 
 @router.get("/rag-exhibits")
 async def get_rag_exhibits(authorized: bool = Depends(verify_token)):
-    """Get all RAG exhibits from ted_museum folder."""
-    mapping = _load_qr_mapping()
-    reverse_mapping = {v: k for k, v in mapping.items()}
+    """Get all RAG exhibits."""
+    metadata = _load_exhibit_metadata()
+    exhibits_data = metadata.get("exhibits", {})
     
     exhibits = []
-    if os.path.exists(TED_MUSEUM_DIR):
-        for filename in sorted(os.listdir(TED_MUSEUM_DIR)):
-            if filename.endswith('.txt'):
-                exhibit_id = filename.replace('.txt', '')
-                filepath = os.path.join(TED_MUSEUM_DIR, filename)
-                
-                # Read first line as title
-                try:
-                    with open(filepath, 'r', encoding='utf-8') as f:
-                        content = f.read()
-                        title = content.split('\n')[0].strip() if content else exhibit_id
-                except:
-                    title = exhibit_id
-                    content = ""
-                
-                qr_id = reverse_mapping.get(exhibit_id, "")
-                exhibits.append({
-                    "exhibit_id": exhibit_id,
-                    "title": title,
-                    "qr_id": qr_id,
-                    "filename": filename,
-                    "size": len(content)
-                })
+    for exhibit_id, data in sorted(exhibits_data.items()):
+        num = _id_to_num(exhibit_id)
+        filename = f"ESER_DATA_{num}.txt"
+        filepath = os.path.join(TED_MUSEUM_DIR, filename)
+        
+        # Get content size
+        try:
+            content = open(filepath, 'r', encoding='utf-8').read()
+            size = len(content)
+        except:
+            content = ""
+            size = 0
+        
+        exhibits.append({
+            "exhibit_id": exhibit_id,
+            "title": data.get("title", ""),
+            "qr": data.get("qr", ""),
+            "category": data.get("category", ""),
+            "image": data.get("image", ""),
+            "content_file": data.get("content_file", filename),
+            "size": size
+        })
     
-    return {"exhibits": exhibits, "total": len(exhibits)}
+    return {
+        "exhibits": exhibits, 
+        "total": len(exhibits),
+        "next_id": _get_next_id()
+    }
 
 
 @router.get("/rag-exhibits/{exhibit_id}")
 async def get_rag_exhibit_content(exhibit_id: str, authorized: bool = Depends(verify_token)):
     """Get content of a specific RAG exhibit."""
-    filepath = os.path.join(TED_MUSEUM_DIR, f"{exhibit_id}.txt")
+    num = _id_to_num(exhibit_id)
+    filename = f"ESER_DATA_{num}.txt"
+    filepath = os.path.join(TED_MUSEUM_DIR, filename)
+    
     if not os.path.exists(filepath):
         raise HTTPException(status_code=404, detail="Exhibit not found")
     
     with open(filepath, 'r', encoding='utf-8') as f:
         content = f.read()
     
-    mapping = _load_qr_mapping()
-    reverse_mapping = {v: k for k, v in mapping.items()}
-    qr_id = reverse_mapping.get(exhibit_id, "")
+    # Get metadata
+    metadata = _load_exhibit_metadata()
+    meta = metadata.get("exhibits", {}).get(exhibit_id, {})
     
     return {
         "exhibit_id": exhibit_id,
         "content": content,
-        "qr_id": qr_id
+        "qr": meta.get("qr", ""),
+        "title": meta.get("title", ""),
+        "category": meta.get("category", ""),
+        "image": meta.get("image", "")
     }
 
 
 class RAGExhibitUpdate(BaseModel):
     content: str
-    qr_id: str = ""
+    qr: str = ""
+    title: str = ""
+    category: str = ""
+    image: str = ""
 
 
 @router.put("/rag-exhibits/{exhibit_id}")
 async def update_rag_exhibit(exhibit_id: str, data: RAGExhibitUpdate, authorized: bool = Depends(verify_token)):
-    """Update RAG exhibit content and QR mapping."""
-    filepath = os.path.join(TED_MUSEUM_DIR, f"{exhibit_id}.txt")
+    """Update RAG exhibit content and metadata."""
+    num = _id_to_num(exhibit_id)
+    filename = f"ESER_DATA_{num}.txt"
+    filepath = os.path.join(TED_MUSEUM_DIR, filename)
+    
     if not os.path.exists(filepath):
         raise HTTPException(status_code=404, detail="Exhibit not found")
     
-    # Update content
+    # Update content file
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(data.content)
     
-    # Update QR mapping if provided
-    if data.qr_id:
-        mapping = _load_qr_mapping()
-        # Remove old mapping for this exhibit
-        old_qr = None
-        for qr, ex in mapping.items():
-            if ex == exhibit_id:
-                old_qr = qr
-                break
-        if old_qr:
-            del mapping[old_qr]
-        # Add new mapping
-        mapping[data.qr_id] = exhibit_id
-        _save_qr_mapping(mapping)
+    # Update metadata
+    metadata = _load_exhibit_metadata()
+    if exhibit_id not in metadata["exhibits"]:
+        metadata["exhibits"][exhibit_id] = {}
+    
+    if data.title:
+        metadata["exhibits"][exhibit_id]["title"] = data.title
+    if data.qr:
+        metadata["exhibits"][exhibit_id]["qr"] = data.qr
+    if data.category:
+        metadata["exhibits"][exhibit_id]["category"] = data.category
+    if data.image:
+        metadata["exhibits"][exhibit_id]["image"] = data.image
+    metadata["exhibits"][exhibit_id]["content_file"] = filename
+    _save_exhibit_metadata(metadata)
     
     return {"status": "ok", "message": "Content updated. Run RAG ingestion to update embeddings."}
 
 
 class RAGExhibitCreate(BaseModel):
-    exhibit_id: str
+    qr: str = ""
     content: str
-    qr_id: str = ""
+    title: str = ""
+    category: str = ""
 
 
 @router.post("/rag-exhibits")
 async def create_rag_exhibit(data: RAGExhibitCreate, authorized: bool = Depends(verify_token)):
-    """Create a new RAG exhibit."""
-    filepath = os.path.join(TED_MUSEUM_DIR, f"{data.exhibit_id}.txt")
+    """Create a new RAG exhibit with auto-assigned ID."""
+    # Get next available ID
+    exhibit_id = _get_next_id()
+    num = _id_to_num(exhibit_id)
+    
+    filename = f"ESER_DATA_{num}.txt"
+    filepath = os.path.join(TED_MUSEUM_DIR, filename)
+    
     if os.path.exists(filepath):
         raise HTTPException(status_code=400, detail="Exhibit already exists")
     
@@ -403,36 +498,87 @@ async def create_rag_exhibit(data: RAGExhibitCreate, authorized: bool = Depends(
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(data.content)
     
-    # Update QR mapping if provided
-    if data.qr_id:
-        mapping = _load_qr_mapping()
-        mapping[data.qr_id] = data.exhibit_id
-        _save_qr_mapping(mapping)
+    # Update metadata
+    metadata = _load_exhibit_metadata()
+    metadata["exhibits"][exhibit_id] = {
+        "title": data.title or data.content.split('\n')[0].strip()[:100],
+        "qr": data.qr or f"qr_{num}",  # Default QR if not provided
+        "category": data.category,
+        "image": "",
+        "content_file": filename
+    }
+    _save_exhibit_metadata(metadata)
     
-    return {"status": "ok", "message": "Exhibit created. Run RAG ingestion to add to vector DB."}
+    return {
+        "status": "ok", 
+        "message": "Exhibit created. Run RAG ingestion to add to vector DB.",
+        "exhibit_id": exhibit_id
+    }
 
 
 @router.delete("/rag-exhibits/{exhibit_id}")
 async def delete_rag_exhibit(exhibit_id: str, authorized: bool = Depends(verify_token)):
-    """Delete a RAG exhibit."""
-    filepath = os.path.join(TED_MUSEUM_DIR, f"{exhibit_id}.txt")
+    """Delete a RAG exhibit and its associated image."""
+    num = _id_to_num(exhibit_id)
+    filename = f"ESER_DATA_{num}.txt"
+    filepath = os.path.join(TED_MUSEUM_DIR, filename)
+    
     if not os.path.exists(filepath):
         raise HTTPException(status_code=404, detail="Exhibit not found")
     
+    # Delete the text file
     os.remove(filepath)
     
-    # Remove from QR mapping
-    mapping = _load_qr_mapping()
-    qr_to_remove = None
-    for qr, ex in mapping.items():
-        if ex == exhibit_id:
-            qr_to_remove = qr
+    # Delete associated image (FOTO_XX.*)
+    image_deleted = False
+    for ext in ['.jpg', '.jpeg', '.png', '.webp', '.gif']:
+        img_path = os.path.join(EXHIBITS_IMG_DIR, f"FOTO_{num}{ext}")
+        if os.path.exists(img_path):
+            os.remove(img_path)
+            image_deleted = True
             break
-    if qr_to_remove:
-        del mapping[qr_to_remove]
-        _save_qr_mapping(mapping)
     
-    return {"status": "ok", "message": "Exhibit deleted. Run RAG ingestion to update vector DB."}
+    # Remove from metadata
+    metadata = _load_exhibit_metadata()
+    if exhibit_id in metadata.get("exhibits", {}):
+        del metadata["exhibits"][exhibit_id]
+        _save_exhibit_metadata(metadata)
+    
+    msg = "Exhibit deleted."
+    if image_deleted:
+        msg += " Image also deleted."
+    msg += " Run RAG ingestion to update vector DB."
+    
+    return {"status": "ok", "message": msg}
+
+
+@router.delete("/delete-image/{exhibit_id}")
+async def delete_exhibit_image(exhibit_id: str, authorized: bool = Depends(verify_token)):
+    """Delete only the image for an exhibit."""
+    num = _id_to_num(exhibit_id)
+    
+    # Find and delete the image file
+    exhibits_img_dir = os.path.join(WEB_DIR, "static", "exhibits")
+    image_deleted = False
+    
+    for ext in ['.jpg', '.jpeg', '.png', '.webp', '.gif']:
+        img_path = os.path.join(exhibits_img_dir, f"FOTO_{num}{ext}")
+        if os.path.exists(img_path):
+            os.remove(img_path)
+            image_deleted = True
+            break
+    
+    # Update metadata to clear image field
+    metadata = _load_exhibit_metadata()
+    if exhibit_id in metadata.get("exhibits", {}):
+        metadata["exhibits"][exhibit_id]["image"] = ""
+        _save_exhibit_metadata(metadata)
+    
+    if image_deleted:
+        return {"status": "ok", "message": "Image deleted."}
+    else:
+        return {"status": "ok", "message": "No image found to delete."}
+
 
 
 # ========== RAG INGESTION ==========

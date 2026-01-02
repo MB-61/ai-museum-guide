@@ -37,7 +37,7 @@
       "name": "Atatürk Anıtı (İncek Kampüsü)"
     },
     "qr_03": {
-      "count": 25,
+      "count": 26,
       "name": "Laboratuvar Aküsü (Eski Dönem)"
     },
     "qr_04": {
@@ -46,6 +46,42 @@
     }
   },
   "questions": [
+    {
+      "text": "benim adım ne",
+      "time": "2026-01-02T08:43:38.815219"
+    },
+    {
+      "text": "benim adım kutay aydemir",
+      "time": "2026-01-02T08:42:32.015771"
+    },
+    {
+      "text": "hangi eserler bulunuyor",
+      "time": "2026-01-02T08:34:40.435977"
+    },
+    {
+      "text": "hangi esere bakıyorum",
+      "time": "2026-01-02T08:32:14.585900"
+    },
+    {
+      "text": "bu eserin tarihini söyle",
+      "time": "2026-01-02T08:27:04.495313"
+    },
+    {
+      "text": "bu eser ne zaman yapılmış",
+      "time": "2026-01-02T02:08:23.008782"
+    },
+    {
+      "text": "sana sorum şu ted nasıl seviyor musun",
+      "time": "2026-01-02T02:04:28.010881"
+    },
+    {
+      "text": "ne ler yapıyorsun",
+      "time": "2026-01-02T02:03:33.551440"
+    },
+    {
+      "text": "Ghjucyc",
+      "time": "2026-01-02T01:40:34.393254"
+    },
     {
       "text": "merhaba",
       "time": "2025-12-31T00:30:42.877010"
@@ -173,11 +209,15 @@
       "chats": 8
     },
     "2025-12-31": {
-      "scans": 0,
+      "scans": 1,
       "chats": 3
+    },
+    "2026-01-02": {
+      "scans": 0,
+      "chats": 9
     }
   },
-  "sessions": 52,
+  "sessions": 53,
   "unique_ips": [
     "127.0.0.1",
     "31.223.74.240",

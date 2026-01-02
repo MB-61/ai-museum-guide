@@ -1,52 +1,81 @@
+"""QR Service - Handles QR code lookups."""
+import os
 from typing import Optional, Dict, Any
 
 from app.models.qr_models import QRLookupResponse
-from app.utils.ids import resolve_qr
+from app.utils.ids import get_exhibit_by_qr, get_content_file_path
 from app.services.retriever import retrieve
 
 
 def build_basic_metadata(meta: Dict[str, Any]) -> Dict[str, str]:
-    """
-    Chroma metadata'ından UI için anlamlı alanlar seç.
-    Kendi metadata şemanı göre key'leri değiştirmen gerekebilir.
-    Örn: title, period, location, artist, year...
-    """
+    """Extract meaningful fields from Chroma metadata for UI."""
     fields = ["title", "artist", "year", "period", "location"]
     return {k: str(v) for k, v in meta.items() if k in fields and v is not None}
 
 
-def lookup_exhibit(qr_id: str) -> QRLookupResponse:
+def lookup_exhibit(qr_code: str) -> QRLookupResponse:
     """
-    QR kodundan sergi bilgisini döndürür.
-
-    Adımlar:
-    1. qr_id -> exhibit_id (resolve_qr)
-    2. retriever ile o esere ait 1–2 chunk çek
-    3. İlk chunk'tan kısa bir özet üret (şimdilik sadece kırpıyoruz)
-    4. metadata'dan title / artist / period vb. alanları al
+    Look up exhibit information from QR code.
+    
+    Steps:
+    1. Find exhibit by QR code in exhibit_metadata.json
+    2. Get content file path (ESER_DATA_XX.txt)
+    3. Use retriever to get relevant chunks for context
+    4. Build response with all info
     """
-    exhibit_id = resolve_qr(qr_id)
-
-    # Sadece o sergiye ait dokümanları çek
-    chunks = retrieve(query="short description", exhibit_id=exhibit_id, k=2)
-
+    # Get exhibit by QR code
+    result = get_exhibit_by_qr(qr_code)
+    
+    if result:
+        exhibit_id, metadata = result
+        title = metadata.get("title", exhibit_id)
+        category = metadata.get("category", "")
+        image = metadata.get("image", "")
+        content_file = metadata.get("content_file", "")
+    else:
+        # Fallback for old qr_XX format - try to map to ID_XX
+        if qr_code.startswith("qr_"):
+            num = qr_code.replace("qr_", "")
+            exhibit_id = f"ID_{num}"
+        else:
+            exhibit_id = qr_code
+        title = exhibit_id
+        category = ""
+        image = ""
+        content_file = ""
+    
+    # Get content file path
+    content_path = get_content_file_path(exhibit_id)
+    
+    # Determine exhibit_id for retriever (uses file name format)
+    num = exhibit_id.replace("ID_", "") if exhibit_id.startswith("ID_") else exhibit_id
+    retriever_id = f"ESER_DATA_{num}"
+    
+    # Get relevant chunks from retriever
+    chunks = retrieve(query="short description", exhibit_id=retriever_id, k=2)
+    
     if chunks:
         first_doc, first_meta = chunks[0]
-        # Çok uzun olmasın diye basit kırpma
+        # Truncate for summary
         summary = (first_doc[:280] + "…") if len(first_doc) > 280 else first_doc
-        metadata = build_basic_metadata(first_meta or {})
-        image = first_meta.get("image_url") if first_meta else None
-        title = first_meta.get("title") or exhibit_id
+        response_metadata = build_basic_metadata(first_meta or {})
     else:
+        # Fallback: try reading content file directly
         summary = "No detailed description found yet for this exhibit."
-        metadata = {}
-        image = None
-        title = exhibit_id
-
+        response_metadata = {}
+        
+        if os.path.exists(content_path):
+            try:
+                with open(content_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    summary = (content[:280] + "…") if len(content) > 280 else content
+            except:
+                pass
+    
     return QRLookupResponse(
         exhibit_id=exhibit_id,
         title=title,
         summary=summary,
-        image=image,
-        metadata=metadata,
+        image=image if image else None,
+        metadata=response_metadata,
     )

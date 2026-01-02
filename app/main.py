@@ -41,16 +41,35 @@ def create_app() -> FastAPI:
     # Serve frontend static files
     web_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "web")
     static_dir = os.path.join(web_dir, "static")
+    css_dir = os.path.join(web_dir, "css")
+    js_dir = os.path.join(web_dir, "js")
+    
     if os.path.exists(web_dir):
-        # Mount static directory (for exhibits images etc)
+        # Mount static directory (for exhibits images, avatar, etc)
         if os.path.exists(static_dir):
             app.mount("/static", StaticFiles(directory=static_dir), name="static")
-        # Mount web directory for other files
-        app.mount("/web", StaticFiles(directory=web_dir), name="web")
+        # Mount CSS directory
+        if os.path.exists(css_dir):
+            app.mount("/css", StaticFiles(directory=css_dir), name="css")
+        # Mount JS directory
+        if os.path.exists(js_dir):
+            app.mount("/js", StaticFiles(directory=js_dir), name="js")
         
         @app.get("/")
         async def serve_frontend():
-            return FileResponse(os.path.join(web_dir, "avatar-guide-v2.html"))
+            return FileResponse(os.path.join(web_dir, "index.html"))
+        
+        @app.get("/index.html")
+        async def serve_index():
+            return FileResponse(os.path.join(web_dir, "index.html"))
+        
+        @app.get("/qr-scan.html")
+        async def serve_qr_scan():
+            return FileResponse(os.path.join(web_dir, "qr-scan.html"))
+        
+        @app.get("/chat.html")
+        async def serve_chat():
+            return FileResponse(os.path.join(web_dir, "chat.html"))
         
         @app.get("/admin")
         async def serve_admin():

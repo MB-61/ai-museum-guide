@@ -13,170 +13,222 @@
     "Diğer"
   ],
   "exhibits": {
-    "qr_01": {
+    "ID_01": {
       "title": "Türk Maarif Cemiyeti Tüzüğü (1928)",
+      "qr": "qr_01",
       "category": "",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_01.txt"
     },
-    "qr_02": {
+    "ID_02": {
       "title": "Atatürk Anıtı (İncek Kampüsü)",
+      "qr": "qr_02",
       "category": "Fotoğraf",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_02.txt"
     },
-    "qr_03": {
+    "ID_03": {
       "title": "Laboratuvar Aküsü (Eski Dönem)",
+      "qr": "qr_03",
       "category": "Eğitim Eşyası",
-      "image": "/static/exhibits/qr_03.jpg"
+      "image": "/static/exhibits/FOTO_03.jpg",
+      "content_file": "ESER_DATA_03.txt"
     },
-    "qr_04": {
+    "ID_04": {
       "title": "Temsili Sınıf Canlandırması ve Sıralar",
+      "qr": "qr_04",
       "category": "Eğitim Eşyası",
-      "image": "/static/exhibits/qr_04.jpg"
+      "image": "/static/exhibits/FOTO_04.jpg",
+      "content_file": "ESER_DATA_04.txt"
     },
-    "qr_05": {
+    "ID_05": {
       "title": "Daktilo ve Hesap Makineleri",
+      "qr": "qr_05",
       "category": "Makine/Alet",
-      "image": "/static/exhibits/qr_05.png"
+      "image": "/static/exhibits/FOTO_05.png",
+      "content_file": "ESER_DATA_05.txt"
     },
-    "qr_06": {
+    "ID_06": {
       "title": "Eski Mezuniyet Cübbeleri ve Kepleri",
+      "qr": "qr_06",
       "category": "Kıyafet/Üniforma",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_06.txt"
     },
-    "qr_07": {
+    "ID_07": {
       "title": "Tarihi Diplomalar ve Belgeler",
+      "qr": "qr_07",
       "category": "Belge",
-      "image": "/static/exhibits/qr_07.png"
+      "image": "/static/exhibits/FOTO_07.png",
+      "content_file": "ESER_DATA_07.txt"
     },
-    "qr_08": {
+    "ID_08": {
       "title": "Türk Marşı Orijinal Notaları (1945)",
+      "qr": "qr_08",
       "category": "Belge",
-      "image": "/static/exhibits/qr_08.png"
+      "image": "/static/exhibits/FOTO_08.png",
+      "content_file": "ESER_DATA_08.txt"
     },
-    "qr_09": {
+    "ID_09": {
       "title": "Ahmet Ünlü'nün El Yazması Notaları (1965)",
+      "qr": "qr_09",
       "category": "Belge",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_09.txt"
     },
-    "qr_10": {
+    "ID_10": {
       "title": "90. Yıl Rölyefi (Dijital Replikası)",
+      "qr": "qr_10",
       "category": "Diğer",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_10.txt"
     },
-    "qr_11": {
+    "ID_11": {
       "title": "Si Bemol Trompet",
+      "qr": "qr_11",
       "category": "Müzik Aleti",
-      "image": "/static/exhibits/qr_11.png"
+      "image": "/static/exhibits/FOTO_11.png",
+      "content_file": "ESER_DATA_11.txt"
     },
-    "qr_12": {
+    "ID_12": {
       "title": "1928 Yılı Okuma-Yazma Kursu İstatistikleri ve Belgeleri",
+      "qr": "qr_12",
       "category": "Belge",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_12.txt"
     },
-    "qr_13": {
+    "ID_13": {
       "title": "Bando Kıyafeti (1986-1992)",
+      "qr": "qr_13",
       "category": "Kıyafet/Üniforma",
-      "image": "/static/exhibits/qr_13.png"
+      "image": "/static/exhibits/FOTO_13.png",
+      "content_file": "ESER_DATA_13.txt"
     },
-    "qr_14": {
+    "ID_14": {
       "title": "Si Bemol Klarnet (İlk Bando Enstrümanları)",
+      "qr": "qr_14",
       "category": "",
-      "image": ""
+      "image": "/static/exhibits/FOTO_14.png",
+      "content_file": "ESER_DATA_14.txt"
     },
-    "qr_15": {
+    "ID_15": {
       "title": "TED Ankara Koleji Marşı Kaydı ve Sözleri",
+      "qr": "qr_15",
       "category": "Belge",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_15.txt"
     },
-    "qr_16": {
+    "ID_16": {
       "title": "1972-73 Türkiye Basketbol Kupası",
+      "qr": "qr_16",
       "category": "Kupa/Ödül",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_16.txt"
     },
-    "qr_17": {
+    "ID_17": {
       "title": "1957-1958 Okul Spor Yurtları Kız Voleybol Birincilik Kupası",
+      "qr": "qr_17",
       "category": "Kupa/Ödül",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_17.txt"
     },
-    "qr_18": {
+    "ID_18": {
       "title": "1983-1984 Liseler Kız Basketbol Dünya İkinciliği Kupası",
+      "qr": "qr_18",
       "category": "Kupa/Ödül",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_18.txt"
     },
-    "qr_19": {
+    "ID_19": {
       "title": "1969 Türkiye Kız Liseler Arası Voleybol Şampiyonası Kupası",
+      "qr": "qr_19",
       "category": "Kupa/Ödül",
-      "image": "/static/exhibits/qr_19.png"
+      "image": "/static/exhibits/FOTO_19.png",
+      "content_file": "ESER_DATA_19.txt"
     },
-    "qr_20": {
+    "ID_20": {
       "title": "1984-1985 Lise Gençler Türkiye Basketbol Birinciliği Kupası",
+      "qr": "qr_20",
       "category": "Kupa/Ödül",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_20.txt"
     },
-    "qr_21": {
+    "ID_21": {
       "title": "Nevin Ürfüoğlu ve Voleybol Arşivi Fotoğrafları",
+      "qr": "qr_21",
       "category": "Fotoğraf",
-      "image": "/static/exhibits/qr_21.png"
+      "image": "/static/exhibits/FOTO_21.png",
+      "content_file": "ESER_DATA_21.txt"
     },
-    "qr_22": {
+    "ID_22": {
       "title": "Retro/Vintage \"Kolejliler\" Forması",
+      "qr": "qr_22",
       "category": "Kıyafet/Üniforma",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_22.txt"
     },
-    "qr_23": {
+    "ID_23": {
       "title": "Sirkeci Garı'nda Milli Takım Fotoğrafı (Voleybol)",
+      "qr": "qr_23",
       "category": "Fotoğraf",
-      "image": "/static/exhibits/qr_23.png"
+      "image": "/static/exhibits/FOTO_23.png",
+      "content_file": "ESER_DATA_23.txt"
     },
-    "qr_24": {
+    "ID_24": {
       "title": "Dilek Bağı Dergisi - 1. Sayı (1930)",
+      "qr": "qr_24",
       "category": "Dergi/Yayın",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_24.txt"
     },
-    "qr_25": {
+    "ID_25": {
       "title": "TED Üniversitesi Kuruluş Kanunu (Resmi Gazete - 7 Temmuz 2009)",
+      "qr": "qr_25",
       "category": "Belge",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_25.txt"
     },
-    "qr_26": {
+    "ID_26": {
       "title": "\"Önce İnsan\" ve Liberal Eğitim Manifestosu",
+      "qr": "qr_26",
       "category": "Belge",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_26.txt"
     },
-    "qr_27": {
+    "ID_27": {
       "title": "1933 Tarihli Okul Flaması",
+      "qr": "qr_27",
       "category": "Bayrak/Flama",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_27.txt"
     },
-    "qr_28": {
+    "ID_28": {
       "title": "Atatürk ve Semra Baydar Fotoğrafı (19 Mayıs 1938)",
+      "qr": "qr_28",
       "category": "Fotoğraf",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_28.txt"
     },
-    "qr_29": {
+    "ID_29": {
       "title": "İlk Kolej Binası Fotoğrafı ve Mimari Çizimleri (1937)",
+      "qr": "qr_29",
       "category": "Fotoğraf",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_29.txt"
     },
-    "qr_30": {
+    "ID_30": {
       "title": "Ziya Gökalp Yerleşkesi Maketi",
+      "qr": "qr_30",
       "category": "Maket/Model",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_30.txt"
     },
-    "qr_31": {
+    "ID_31": {
       "title": "Okul Zili (Ziya Gökalp Dönemi)",
+      "qr": "qr_31",
       "category": "Eğitim Eşyası",
-      "image": ""
-    },
-    "qr_32": {
-      "title": "90 Yıl Rölyefi",
-      "category": "Diğer",
-      "image": ""
-    },
-    "qp_01": {
-      "title": "Türk Maarif Cemiyeti Tüzüğü (1928)",
-      "category": "",
-      "image": ""
+      "image": "",
+      "content_file": "ESER_DATA_31.txt"
     }
   }
 }

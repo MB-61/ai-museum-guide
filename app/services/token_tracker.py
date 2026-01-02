@@ -62,19 +62,10 @@ def get_token_stats() -> Dict[str, Any]:
     today = str(date.today())
     today_data = data["daily"].get(today, {"input": 0, "output": 0, "requests": 0})
     
-    # Get last 7 days
-    last_7_days = {}
-    for i in range(7):
-        d = date.today()
-        d = date(d.year, d.month, d.day - i) if d.day > i else d
-        day_str = str(d)
-        if day_str in data["daily"]:
-            last_7_days[day_str] = data["daily"][day_str]
-    
     return {
         "today": today_data,
         "total": data["total"],
-        "daily_history": last_7_days,
+        "daily_history": data["daily"],  # Return all days
         # Gemini 2.5 Flash pricing (per 1M tokens)
         # Input: $0.15 / 1M = $0.00000015 per token
         # Output: $0.60 / 1M = $0.0000006 per token

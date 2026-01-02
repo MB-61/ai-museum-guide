@@ -1,11 +1,5 @@
 telefon dokunmatik klavye sorunu çöz (devam ediyor)
 
-ana sayfa, qr okuma, Genel mod, eser kodu için farklı htmller yap bunlar arasında gezelim bu şekilde geri gittiğimiz zaman avatardan qr yada ana sayfaya geçelim
-
 resimli eserlerde avatar biraz daha yukarı
-
-adminde eklene bir resmi düzenlerken sildiğimde gerçektede C:\Users\pc\Desktop\ai muze guide\ai-museum-guide\web\static\exhibits içden de sil resmi
-
-Ana sayfadaki karşılama yazılarını falan admin panalden değiştirebilelim
 
 yeni büyük özellik genel modda bütün eserlerden yararlanıyor ama toplam kaç eser var gibi soruları cevaplamsı için bir sistem ve admin panelden müzenin genel özellikleri ilgili bir yazı ekleyelim oradanda yararlansın genel modda

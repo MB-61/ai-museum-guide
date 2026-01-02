@@ -78,9 +78,6 @@
             <button onclick="showTab('greetings')"
                 class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 hover:bg-slate-600 transition"
                 data-tab="greetings">💬 Karşılamalar</button>
-            <button onclick="showTab('tokens')"
-                class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 hover:bg-slate-600 transition"
-                data-tab="tokens">🪙 Token Kullanımı</button>
             <button onclick="showTab('stats')"
                 class="tab-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 hover:bg-slate-600 transition"
                 data-tab="stats">📈 İstatistikler</button>
@@ -96,9 +93,17 @@
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-2xl font-bold">Dashboard</h2>
                     <div class="flex items-center gap-3">
+                        <!-- Time Period Selector -->
+                        <select id="time-period" onchange="loadDashboard()"
+                            class="bg-slate-700 border-none rounded-lg px-3 py-2 text-sm focus:ring-blue-500">
+                            <option value="today">Bugün</option>
+                            <option value="week">Bu Hafta</option>
+                            <option value="month">Bu Ay</option>
+                            <option value="year">Bu Yıl</option>
+                            <option value="all">Tümü</option>
+                        </select>
                         <label class="flex items-center gap-2 text-sm text-slate-400">
                             <input type="checkbox" id="auto-refresh" class="rounded">
-                            <!-- checked ekle başlangıçta açık olması için -->
                             <span>Oto yenile (<span id="countdown-timer">10</span>s)</span>
                         </label>
                         <button onclick="refreshAllData()"
@@ -108,21 +113,23 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Period Stats -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <div class="bg-slate-800 rounded-xl p-6">
-                        <p class="text-slate-400 text-sm">Bugün QR Tarama</p>
+                        <p id="stat-label-scans" class="text-slate-400 text-sm">Bugün QR Tarama</p>
                         <p id="stat-scans" class="text-3xl font-bold text-blue-400 mt-2">-</p>
                     </div>
                     <div class="bg-slate-800 rounded-xl p-6">
-                        <p class="text-slate-400 text-sm">Bugün Sohbet</p>
+                        <p id="stat-label-chats" class="text-slate-400 text-sm">Bugün Sohbet</p>
                         <p id="stat-chats" class="text-3xl font-bold text-green-400 mt-2">-</p>
                     </div>
                     <div class="bg-slate-800 rounded-xl p-6">
-                        <p class="text-slate-400 text-sm">Bugün Token</p>
+                        <p id="stat-label-tokens" class="text-slate-400 text-sm">Bugün Token</p>
                         <p id="stat-tokens" class="text-3xl font-bold text-purple-400 mt-2">-</p>
                     </div>
                     <div class="bg-slate-800 rounded-xl p-6">
-                        <p class="text-slate-400 text-sm">Bugün Maliyet</p>
+                        <p id="stat-label-cost" class="text-slate-400 text-sm">Bugün Maliyet</p>
                         <p id="stat-cost" class="text-3xl font-bold text-yellow-400 mt-2">-</p>
                     </div>
                 </div>
@@ -210,9 +217,9 @@
                     <table class="w-full">
                         <thead class="bg-slate-700">
                             <tr>
-                                <th class="text-left px-4 py-3 text-sm font-medium text-slate-300">QR</th>
+                                <th class="text-left px-4 py-3 text-sm font-medium text-slate-300">ID</th>
                                 <th class="text-left px-4 py-3 text-sm font-medium text-slate-300">Başlık</th>
-                                <th class="text-left px-4 py-3 text-sm font-medium text-slate-300">Dosya ID</th>
+                                <th class="text-left px-4 py-3 text-sm font-medium text-slate-300">QR</th>
                                 <th class="text-left px-4 py-3 text-sm font-medium text-slate-300">Boyut</th>
                                 <th class="text-right px-4 py-3 text-sm font-medium text-slate-300">İşlemler</th>
                             </tr>
@@ -234,7 +241,7 @@
                     <div class="p-4 flex-1 overflow-y-auto">
                         <div class="grid grid-cols-2 gap-4 mb-4">
                             <div>
-                                <label class="block text-sm text-slate-400 mb-2">Dosya ID (değiştirilemez)</label>
+                                <label class="block text-sm text-slate-400 mb-2">ID</label>
                                 <input type="text" id="modal-exhibit-id" disabled
                                     class="w-full bg-slate-600 border border-slate-500 rounded-lg px-4 py-2 text-slate-300">
                             </div>
@@ -243,7 +250,7 @@
                                 <div class="flex gap-2">
                                     <input type="text" id="modal-qr-id" placeholder="qr_01" onblur="checkQRDuplicate()"
                                         class="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
-                                    <button onclick="autoFillQR()" type="button"
+                                    <button id="modal-qr-oto-btn" onclick="autoFillQR()" type="button"
                                         class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium"
                                         title="Sonraki QR">
                                         Oto
@@ -292,11 +299,18 @@
                         </div>
                     </div>
                     <div class="flex items-center justify-between p-4 border-t border-slate-700">
-                        <p class="text-slate-400 text-sm">⚠️ Kayıt sonrası RAG Güncellemesi gerekir</p>
+                        <div class="flex items-center gap-4">
+                            <button id="modal-delete-btn" onclick="deleteFromModal()"
+                                class="hidden px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 transition flex items-center gap-2">
+                                <span class="material-symbols-outlined" style="font-size:18px">delete</span>
+                                Eseri Sil
+                            </button>
+                            <p class="text-slate-400 text-sm">⚠️ Kayıt sonrası RAG gerekir</p>
+                        </div>
                         <div class="flex gap-2">
-                            <button onclick="closeExhibitModal()"
+                            <button id="modal-cancel-btn" onclick="closeExhibitModal()"
                                 class="px-6 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition">İptal</button>
-                            <button onclick="saveExhibitModal()"
+                            <button id="modal-save-btn" onclick="saveExhibitModal()"
                                 class="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 font-medium transition">Kaydet</button>
                         </div>
                     </div>
@@ -355,36 +369,6 @@
                 </div>
             </div>
 
-            <!-- Tokens Tab -->
-            <div id="tab-tokens" class="tab-content hidden">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold">Token Kullanımı</h2>
-                    <button onclick="loadTokens()"
-                        class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-medium transition flex items-center gap-2">
-                        <span class="material-symbols-outlined">refresh</span>
-                        Yenile
-                    </button>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="bg-slate-800 rounded-xl p-6">
-                        <p class="text-slate-400 text-sm">Toplam Input Token</p>
-                        <p id="token-input" class="text-2xl font-bold text-blue-400 mt-2">-</p>
-                    </div>
-                    <div class="bg-slate-800 rounded-xl p-6">
-                        <p class="text-slate-400 text-sm">Toplam Output Token</p>
-                        <p id="token-output" class="text-2xl font-bold text-green-400 mt-2">-</p>
-                    </div>
-                    <div class="bg-slate-800 rounded-xl p-6">
-                        <p class="text-slate-400 text-sm">Toplam İstek</p>
-                        <p id="token-requests" class="text-2xl font-bold text-purple-400 mt-2">-</p>
-                    </div>
-                </div>
-                <div class="bg-slate-800 rounded-xl p-6">
-                    <h3 class="font-semibold mb-4">Günlük Kullanım</h3>
-                    <div id="token-daily" class="space-y-2"></div>
-                </div>
-            </div>
-
             <!-- Stats Tab -->
             <div id="tab-stats" class="tab-content hidden">
                 <div class="flex items-center justify-between mb-6">
@@ -395,27 +379,81 @@
                         Yenile
                     </button>
                 </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- QR Stats and Recent Questions -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                     <div class="bg-slate-800 rounded-xl p-6">
-                        <h3 class="font-semibold mb-4">🔥 En Çok Taranan QR Kodlar</h3>
-                        <div id="top-qr" class="space-y-2"></div>
+                        <h3 class="font-semibold mb-4">🔥 En Çok Taranan QR Kodlar <span
+                                class="text-slate-400 text-sm font-normal">(İlk 10)</span></h3>
+                        <div id="top-qr" class="space-y-2 max-h-80 overflow-y-auto"></div>
                     </div>
                     <div class="bg-slate-800 rounded-xl p-6">
                         <h3 class="font-semibold mb-4">💬 Son Sorular</h3>
-                        <div id="recent-questions" class="space-y-2 max-h-64 overflow-y-auto"></div>
+                        <div id="recent-questions" class="space-y-2 max-h-80 overflow-y-auto"></div>
                     </div>
+                </div>
+
+                <!-- Token Usage Section -->
+                <div class="bg-slate-800 rounded-xl p-6">
+                    <h3 class="font-semibold mb-4">📊 Token Kullanımı</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                        <div class="bg-slate-700/50 rounded-lg p-4 text-center">
+                            <p class="text-slate-400 text-sm">Toplam Input</p>
+                            <p id="token-input" class="text-xl font-bold text-blue-400 mt-1">-</p>
+                        </div>
+                        <div class="bg-slate-700/50 rounded-lg p-4 text-center">
+                            <p class="text-slate-400 text-sm">Toplam Output</p>
+                            <p id="token-output" class="text-xl font-bold text-green-400 mt-1">-</p>
+                        </div>
+                        <div class="bg-slate-700/50 rounded-lg p-4 text-center">
+                            <p class="text-slate-400 text-sm">Toplam İstek</p>
+                            <p id="token-requests" class="text-xl font-bold text-purple-400 mt-1">-</p>
+                        </div>
+                        <div class="bg-slate-700/50 rounded-lg p-4 text-center">
+                            <p class="text-slate-400 text-sm">Toplam Maliyet</p>
+                            <p id="token-cost" class="text-xl font-bold text-yellow-400 mt-1">-</p>
+                        </div>
+                    </div>
+                    <h4 class="text-sm text-slate-400 mb-2">Geçmiş Kullanım</h4>
+                    <div id="token-daily" class="space-y-2 max-h-48 overflow-y-auto"></div>
                 </div>
             </div>
 
             <!-- API Tab -->
             <div id="tab-api" class="tab-content hidden">
-                <h2 class="text-2xl font-bold mb-6">API Anahtarları</h2>
-                <div class="bg-slate-800 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold">API Anahtarları</h2>
+                    <button onclick="loadApiKeys()"
+                        class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-medium transition flex items-center gap-2">
+                        <span class="material-symbols-outlined">refresh</span>
+                        Yenile
+                    </button>
+                </div>
+
+                <!-- API Keys Status -->
+                <div class="bg-slate-800 rounded-xl p-6 mb-6">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-semibold">Gemini API Anahtarları</h3>
-                        <span id="current-key" class="text-sm text-slate-400">Aktif: -</span>
+                        <h3 class="font-semibold">🔑 Gemini API Anahtarları</h3>
+                        <div class="flex items-center gap-4 text-sm">
+                            <span id="current-key" class="text-slate-400">Aktif: -</span>
+                            <span id="api-timeout" class="text-slate-400">Timeout: -s</span>
+                        </div>
                     </div>
                     <div id="api-keys-list" class="space-y-2"></div>
+                </div>
+
+                <!-- API Error Logs -->
+                <div class="bg-slate-800 rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold">⚠️ API Hata Logları</h3>
+                        <button onclick="loadApiErrors()"
+                            class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm transition">
+                            Yenile
+                        </button>
+                    </div>
+                    <div id="api-errors-list" class="space-y-2 max-h-80 overflow-y-auto">
+                        <p class="text-slate-400 text-sm">Henüz hata yok</p>
+                    </div>
                 </div>
             </div>
         </main>
@@ -611,7 +649,24 @@
         }
 
         async function loadDashboard() {
-            const data = await fetchWithAuth(`${API_BASE}/dashboard`);
+            const period = document.getElementById('time-period')?.value || 'today';
+
+            // Update labels based on period
+            const periodLabels = {
+                'today': 'Bugün',
+                'week': 'Haftalık',
+                'month': 'Aylık',
+                'year': 'Yıllık',
+                'all': 'Toplam'
+            };
+            const label = periodLabels[period] || 'Bugün';
+
+            document.getElementById('stat-label-scans').textContent = `${label} QR Tarama`;
+            document.getElementById('stat-label-chats').textContent = `${label} Sohbet`;
+            document.getElementById('stat-label-tokens').textContent = `${label} Token`;
+            document.getElementById('stat-label-cost').textContent = `${label} Maliyet`;
+
+            const data = await fetchWithAuth(`${API_BASE}/dashboard?period=${period}`);
             if (!data) return;
             document.getElementById('stat-scans').textContent = data.today_scans || 0;
             document.getElementById('stat-chats').textContent = data.today_chats || 0;
@@ -649,6 +704,11 @@
         let countdownValue = 10;
 
         setInterval(() => {
+            // Stop if not logged in or admin screen hidden
+            if (!authToken || document.getElementById('admin-screen').classList.contains('hidden')) {
+                return;
+            }
+
             const autoRefresh = document.getElementById('auto-refresh');
             const countdownEl = document.getElementById('countdown-timer');
 
@@ -729,11 +789,13 @@
 
         async function loadStats() {
             const data = await fetchWithAuth(`${API_BASE}/stats`);
+            const tokens = await fetchWithAuth(`${API_BASE}/tokens`);
             if (!data) return;
 
+            // Top 10 QR codes
             const topQr = document.getElementById('top-qr');
             topQr.innerHTML = '';
-            (data.top_qr_codes || []).forEach((q, i) => {
+            (data.top_qr_codes || []).slice(0, 10).forEach((q, i) => {
                 topQr.innerHTML += `
                     <div class="flex justify-between items-center bg-slate-700 rounded-lg px-4 py-2">
                         <span>${i + 1}. ${q.name || q.qr_id}</span>
@@ -742,6 +804,7 @@
                 `;
             });
 
+            // Recent questions
             const questions = document.getElementById('recent-questions');
             questions.innerHTML = '';
             (data.recent_questions || []).forEach(q => {
@@ -752,6 +815,28 @@
                     </div>
                 `;
             });
+
+            // Token stats
+            if (tokens) {
+                document.getElementById('token-input').textContent = (tokens.total?.input || 0).toLocaleString();
+                document.getElementById('token-output').textContent = (tokens.total?.output || 0).toLocaleString();
+                document.getElementById('token-requests').textContent = (tokens.total?.requests || 0).toLocaleString();
+                document.getElementById('token-cost').textContent = `$${(tokens.estimated_cost_usd || 0).toFixed(4)}`;
+
+                // Daily history - show date and total tokens for that day
+                const daily = document.getElementById('token-daily');
+                daily.innerHTML = '';
+                const dailyEntries = Object.entries(tokens.daily_history || {}).sort((a, b) => b[0].localeCompare(a[0]));
+                dailyEntries.forEach(([date, stats]) => {
+                    const totalDay = (stats.input || 0) + (stats.output || 0);
+                    daily.innerHTML += `
+                        <div class="flex justify-between items-center bg-slate-700/50 rounded-lg px-4 py-2 text-sm">
+                            <span class="text-slate-300">${date}</span>
+                            <span class="text-purple-400 font-medium">${totalDay.toLocaleString()} token</span>
+                        </div>
+                    `;
+                });
+            }
         }
 
         async function loadApiKeys() {
@@ -759,18 +844,77 @@
             if (!data) return;
 
             document.getElementById('current-key').textContent = `Aktif: #${data.current_index + 1}`;
+            document.getElementById('api-timeout').textContent = `Timeout: ${data.timeout || 15}s`;
 
             const list = document.getElementById('api-keys-list');
             list.innerHTML = '';
             (data.keys || []).forEach((k, i) => {
-                const statusColor = k.status === 'active' ? 'text-green-400' : 'text-red-400';
+                const isActive = k.status === 'active';
+                const statusColor = isActive ? 'text-green-400' : 'text-slate-400';
+                const statusBg = isActive ? 'bg-green-500/20' : 'bg-slate-600';
                 list.innerHTML += `
-                    <div class="flex justify-between items-center bg-slate-700 rounded-lg px-4 py-3">
-                        <div>
-                            <span class="font-mono">${k.key_preview}</span>
-                            <span class="text-xs text-slate-400 ml-2">Key #${i + 1}</span>
+                    <div class="flex justify-between items-center ${isActive ? 'bg-green-900/20 border border-green-500/30' : 'bg-slate-700'} rounded-lg px-4 py-3">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 ${statusBg} rounded-full flex items-center justify-center text-sm font-bold">#${k.index || i + 1}</span>
+                            <span class="font-mono text-sm">${k.key || 'N/A'}</span>
                         </div>
-                        <span class="${statusColor} font-medium">${k.status || 'unknown'}</span>
+                        <span class="${statusColor} font-medium text-sm px-3 py-1 rounded-full ${statusBg}">${k.status || 'standby'}</span>
+                    </div>
+                `;
+            });
+
+            // Also load errors when loading keys
+            loadApiErrors();
+        }
+
+        async function loadApiErrors() {
+            const data = await fetchWithAuth(`${API_BASE}/api-errors`);
+            const list = document.getElementById('api-errors-list');
+            list.innerHTML = '';
+
+            if (!data || !data.errors || data.errors.length === 0) {
+                list.innerHTML = '<p class="text-slate-400 text-sm">✅ Henüz hata yok</p>';
+                return;
+            }
+
+            data.errors.slice().reverse().forEach(error => {
+                // Parse error log line: [timestamp] CATEGORY: xxx | KEY: xxx | ACTION: xxx | ERROR: xxx
+                const categoryMatch = error.match(/CATEGORY: (\w+)/);
+                const keyMatch = error.match(/KEY: ([\d\/]+)/);
+                const actionMatch = error.match(/ACTION: (\w+)/);
+                const errorMatch = error.match(/ERROR: (.+)$/);
+                const timeMatch = error.match(/\[([\d\-: ]+)\]/);
+
+                const category = categoryMatch ? categoryMatch[1] : 'UNKNOWN';
+                const keyInfo = keyMatch ? keyMatch[1] : '?';
+                const action = actionMatch ? actionMatch[1] : '?';
+                const errorMsg = errorMatch ? errorMatch[1] : error;
+                const time = timeMatch ? timeMatch[1] : '';
+
+                // Category colors
+                const categoryColors = {
+                    'RATE_LIMIT': 'bg-yellow-500/20 text-yellow-400',
+                    'LEAKED': 'bg-red-500/20 text-red-400',
+                    'INVALID': 'bg-red-500/20 text-red-400',
+                    'TIMEOUT': 'bg-orange-500/20 text-orange-400',
+                    'QUOTA': 'bg-yellow-500/20 text-yellow-400',
+                    'PERMISSION': 'bg-red-500/20 text-red-400',
+                    'ALL_KEYS_EXHAUSTED': 'bg-red-500/20 text-red-400',
+                    'UNKNOWN': 'bg-slate-500/20 text-slate-400'
+                };
+                const colorClass = categoryColors[category] || categoryColors['UNKNOWN'];
+
+                list.innerHTML += `
+                    <div class="bg-slate-700/50 rounded-lg px-4 py-3 text-sm border-l-4 ${category.includes('LEAKED') || category.includes('EXHAUSTED') ? 'border-red-500' : 'border-yellow-500'}">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2 py-0.5 rounded text-xs font-medium ${colorClass}">${category}</span>
+                            <span class="text-slate-500 text-xs">${time}</span>
+                        </div>
+                        <div class="flex items-center gap-4 text-xs text-slate-400 mb-2">
+                            <span>🔑 Key: ${keyInfo}</span>
+                            <span>⚡ ${action}</span>
+                        </div>
+                        <p class="text-slate-300 text-xs break-all">${errorMsg.substring(0, 150)}${errorMsg.length > 150 ? '...' : ''}</p>
                     </div>
                 `;
             });
@@ -786,17 +930,22 @@
             if (!data) return;
 
             allExhibits = data.exhibits || [];
-            // Sort by QR number
+            // Store next available ID
+            window.nextExhibitId = data.next_id || 'ID_01';
+
+            // Sort by ID number
             allExhibits.sort((a, b) => {
-                if (!a.qr_id && !b.qr_id) return a.exhibit_id.localeCompare(b.exhibit_id);
-                if (!a.qr_id) return 1;
-                if (!b.qr_id) return -1;
-                const numA = parseInt(a.qr_id.replace('qr_', '')) || 999;
-                const numB = parseInt(b.qr_id.replace('qr_', '')) || 999;
+                const numA = parseInt(a.exhibit_id.replace('ID_', '')) || 999;
+                const numB = parseInt(b.exhibit_id.replace('ID_', '')) || 999;
                 return numA - numB;
             });
             document.getElementById('exhibit-count').textContent = data.total || 0;
             renderExhibitsTable(allExhibits);
+
+            // Also refresh card view if visible
+            if (document.getElementById('show-images-toggle').checked) {
+                renderExhibitCards(allExhibits);
+            }
         }
 
         function renderExhibitsTable(exhibits) {
@@ -807,14 +956,14 @@
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-700/50';
                 tr.innerHTML = `
-                    <td class="px-4 py-3">
-                        ${e.qr_id ? `<span class="bg-blue-600/30 text-blue-300 px-2 py-1 rounded text-xs font-mono">${e.qr_id}</span>` : '<span class="text-slate-500">-</span>'}
-                    </td>
+                    <td class="px-4 py-3 text-slate-400 text-sm font-mono">${e.exhibit_id}</td>
                     <td class="px-4 py-3 font-medium">${e.title.substring(0, 50)}${e.title.length > 50 ? '...' : ''}</td>
-                    <td class="px-4 py-3 text-slate-400 text-sm font-mono">${e.exhibit_id.substring(0, 25)}${e.exhibit_id.length > 25 ? '...' : ''}</td>
+                    <td class="px-4 py-3">
+                        ${e.qr ? `<span class="bg-blue-600/30 text-blue-300 px-2 py-1 rounded text-xs font-mono">${e.qr}</span>` : '<span class="text-slate-500">-</span>'}
+                    </td>
                     <td class="px-4 py-3 text-slate-400 text-sm">${(e.size / 1000).toFixed(1)} KB</td>
                     <td class="px-4 py-3 text-right flex gap-1 justify-end">
-                        ${e.qr_id ? `<button onclick="showQRCode('${e.qr_id}')" class="text-purple-400 hover:text-purple-300" title="QR Kodu Göster">
+                        ${e.qr ? `<button onclick="showQRCode('${e.qr}')" class="text-purple-400 hover:text-purple-300" title="QR Kodu Göster">
                             <span class="material-symbols-outlined" style="font-size:20px">qr_code_2</span>
                         </button>` : ''}
                         <button onclick="openExhibitEditor('${e.exhibit_id}')" class="text-blue-400 hover:text-blue-300" title="Düzenle">
@@ -834,7 +983,7 @@
             const filtered = allExhibits.filter(e =>
                 e.title.toLowerCase().includes(search) ||
                 e.exhibit_id.toLowerCase().includes(search) ||
-                (e.qr_id && e.qr_id.toLowerCase().includes(search))
+                (e.qr && e.qr.toLowerCase().includes(search))
             );
             renderExhibitsTable(filtered);
             if (document.getElementById('show-images-toggle').checked) {
@@ -883,13 +1032,11 @@
             const container = document.getElementById('exhibit-cards');
             container.innerHTML = '';
 
-            const metadata = await loadExhibitMetadata();
-
             exhibits.forEach(e => {
-                const meta = metadata[e.qr_id] || {};
-                const hasImage = meta.image && meta.image.trim() !== '';
-                const imageUrl = meta.image || '';
-                const category = meta.category || '';
+                // Use fields directly from API response
+                const hasImage = e.image && e.image.trim() !== '';
+                const imageUrl = e.image || '';
+                const category = e.category || '';
 
                 const card = document.createElement('div');
                 card.className = 'bg-slate-800 rounded-xl overflow-hidden hover:ring-2 hover:ring-blue-500 transition cursor-pointer';
@@ -905,7 +1052,7 @@
                 card.innerHTML = `
                     <div class="aspect-video bg-slate-700 relative overflow-hidden">
                         ${imageContent}
-                        ${e.qr_id ? `<span class="absolute top-2 left-2 bg-blue-600/90 text-xs px-2 py-1 rounded font-mono">${e.qr_id}</span>` : ''}
+                        ${e.qr ? `<span class="absolute top-2 left-2 bg-blue-600/90 text-xs px-2 py-1 rounded font-mono">${e.qr}</span>` : ''}
                     </div>
                     <div class="p-3">
                         <h4 class="font-medium text-sm line-clamp-2 mb-1">${e.title}</h4>
@@ -918,8 +1065,8 @@
 
         function getNextQRNumber() {
             const usedNumbers = allExhibits
-                .filter(e => e.qr_id && e.qr_id.startsWith('qr_'))
-                .map(e => parseInt(e.qr_id.replace('qr_', '')) || 0);
+                .filter(e => e.qr && e.qr.startsWith('qr_'))
+                .map(e => parseInt(e.qr.replace('qr_', '')) || 0);
             const maxNum = usedNumbers.length > 0 ? Math.max(...usedNumbers) : 0;
             return maxNum + 1;
         }
@@ -942,7 +1089,7 @@
 
             // Check if QR is already used (by another exhibit, not the current one being edited)
             const isDuplicate = allExhibits.some(e =>
-                e.qr_id === qrId &&
+                e.qr === qrId &&
                 e.exhibit_id !== currentEditExhibitId
             );
 
@@ -959,7 +1106,7 @@
 
         async function printAllQRCodes() {
             // Get all exhibits with QR codes
-            const exhibitsWithQR = allExhibits.filter(e => e.qr_id);
+            const exhibitsWithQR = allExhibits.filter(e => e.qr);
 
             if (exhibitsWithQR.length === 0) {
                 await customAlert('QR kodu atanmış eser bulunamadı!', 'error');
@@ -1024,21 +1171,21 @@
                     <h1>QR Kodlar</h1>
                     <div class="qr-grid" id="qr-container"></div>
                     <script>
-                        const exhibits = ${JSON.stringify(exhibitsWithQR.map(e => ({ qr_id: e.qr_id, title: e.title })))};
+                        const exhibits = ${JSON.stringify(exhibitsWithQR.map(e => ({ qr: e.qr, title: e.title })))};
                         const container = document.getElementById('qr-container');
                         
                         exhibits.forEach(e => {
                             const item = document.createElement('div');
                             item.className = 'qr-item';
                             item.innerHTML = \`
-                                <div class="qr-code" id="qr-\${e.qr_id}"></div>
+                                <div class="qr-code" id="qr-\${e.qr}"></div>
                                 <div class="qr-title">\${e.title}</div>
-                                <div class="qr-id">\${e.qr_id}</div>
+                                <div class="qr-id">\${e.qr}</div>
                             \`;
                             container.appendChild(item);
                             
-                            new QRCode(document.getElementById('qr-' + e.qr_id), {
-                                text: e.qr_id,
+                            new QRCode(document.getElementById('qr-' + e.qr), {
+                                text: e.qr,
                                 width: 120,
                                 height: 120,
                                 colorDark: "#000000",
@@ -1063,7 +1210,7 @@
         function showQRCode(qrId, exhibitTitle = '') {
             // Find exhibit title if not provided
             if (!exhibitTitle) {
-                const exhibit = allExhibits.find(e => e.qr_id === qrId);
+                const exhibit = allExhibits.find(e => e.qr === qrId);
                 exhibitTitle = exhibit ? exhibit.title : '';
             }
 
@@ -1185,8 +1332,10 @@
             }
         }
 
-        // Load categories on page load
-        loadCategories();
+        // Load categories on page load if logged in
+        if (authToken) {
+            loadCategories();
+        }
 
         // ========== IMAGE UPLOAD HANDLERS ==========
         let pendingImageBase64 = null;
@@ -1267,9 +1416,19 @@
             placeholder.classList.add('hidden');
         }
 
-        function clearImagePreview() {
+        // Track if existing image should be deleted
+        let deleteExistingImage = false;
+
+        async function clearImagePreview() {
             const preview = document.getElementById('image-preview');
             const placeholder = document.getElementById('image-placeholder');
+            const currentImageUrl = document.getElementById('modal-image').value;
+
+            // If there's an existing image URL (not base64), mark for deletion
+            if (currentImageUrl && currentImageUrl.startsWith('/static/')) {
+                deleteExistingImage = true;
+            }
+
             preview.src = '';
             preview.classList.add('hidden');
             placeholder.classList.remove('hidden');
@@ -1277,8 +1436,24 @@
             pendingImageBase64 = null;
         }
 
-        async function uploadPendingImage(qrId) {
+        async function deleteImageFromServer(exhibitId) {
+            if (!exhibitId) return;
+            try {
+                await fetch(`${API_BASE}/delete-image/${exhibitId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+            } catch (e) {
+                console.error('Image delete failed:', e);
+            }
+        }
+
+        async function uploadPendingImage(exhibitId) {
             if (!pendingImageBase64) return null;
+
+            // Convert ID_33 to FOTO_33 format
+            const num = exhibitId.replace('ID_', '');
+            const fotoName = `FOTO_${num}`;
 
             try {
                 const res = await fetch(`${API_BASE}/upload-image`, {
@@ -1289,7 +1464,7 @@
                     },
                     body: JSON.stringify({
                         image_data: pendingImageBase64,
-                        filename: qrId
+                        filename: fotoName
                     })
                 });
 
@@ -1311,14 +1486,30 @@
             isCreatingNew = true;
             currentEditExhibitId = null;
             document.getElementById('modal-title').textContent = 'Yeni Eser Oluştur';
-            document.getElementById('modal-exhibit-id').value = '';
-            document.getElementById('modal-exhibit-id').disabled = false;
+            // Show next available ID (auto-assigned, read-only)
+            document.getElementById('modal-exhibit-id').value = window.nextExhibitId || 'ID_01';
+            document.getElementById('modal-exhibit-id').disabled = true;
             document.getElementById('modal-qr-id').value = '';
             document.getElementById('modal-title-input').value = '';
             document.getElementById('modal-category').value = '';
             document.getElementById('modal-content').value = '';
+            deleteExistingImage = false;  // Reset flag
             clearImagePreview();
             await loadCategories();
+            // Hide delete button for new exhibits
+            document.getElementById('modal-delete-btn').classList.add('hidden');
+
+            // Reset button and input states
+            document.getElementById('modal-save-btn').disabled = false;
+            document.getElementById('modal-save-btn').innerHTML = 'Kaydet';
+            document.getElementById('modal-cancel-btn').disabled = false;
+            document.getElementById('modal-qr-oto-btn').disabled = false;
+
+            // Re-enable all form inputs except ID
+            const formInputs = document.querySelectorAll('#exhibit-modal input, #exhibit-modal textarea, #exhibit-modal select');
+            formInputs.forEach(input => input.disabled = false);
+            document.getElementById('modal-exhibit-id').disabled = true;  // ID always disabled
+
             document.getElementById('exhibit-modal').classList.remove('hidden');
             document.getElementById('exhibit-modal').classList.add('flex');
         }
@@ -1326,6 +1517,7 @@
         async function openExhibitEditor(exhibitId) {
             isCreatingNew = false;
             currentEditExhibitId = exhibitId;
+            deleteExistingImage = false;  // Reset flag
 
             const data = await fetchWithAuth(`${API_BASE}/rag-exhibits/${exhibitId}`);
             if (!data) return;
@@ -1339,32 +1531,66 @@
             document.getElementById('modal-title').textContent = 'Eser Düzenle';
             document.getElementById('modal-exhibit-id').value = data.exhibit_id;
             document.getElementById('modal-exhibit-id').disabled = true;
-            document.getElementById('modal-qr-id').value = data.qr_id || '';
+            document.getElementById('modal-qr-id').value = data.qr || '';
             document.getElementById('modal-title-input').value = title;
             document.getElementById('modal-content').value = restContent;
 
-            // Load metadata (category, image)
+            // Load categories
             await loadCategories();
-            clearImagePreview(); // Reset first
-            pendingImageBase64 = null;
+            document.getElementById('modal-category').value = data.category || '';
 
-            const qrId = data.qr_id;
-            if (qrId) {
-                const meta = await fetchWithAuth(`${API_BASE}/exhibit-metadata/${qrId}`);
-                if (meta) {
-                    document.getElementById('modal-category').value = meta.category || '';
-                    // Show existing image if available
-                    if (meta.image) {
-                        document.getElementById('modal-image').value = meta.image;
-                        showImagePreview(meta.image);
-                    }
-                }
-            } else {
-                document.getElementById('modal-category').value = '';
+            // Reset image preview
+            clearImagePreview();
+            pendingImageBase64 = null;
+            deleteExistingImage = false;  // Reset here too
+
+            // Show existing image if available (directly from API response)
+            if (data.image) {
+                document.getElementById('modal-image').value = data.image;
+                showImagePreview(data.image);
             }
+
+            // Show delete button for existing exhibits
+            document.getElementById('modal-delete-btn').classList.remove('hidden');
+
+            // Reset button states (in case they were disabled from previous operation)
+            document.getElementById('modal-save-btn').disabled = false;
+            document.getElementById('modal-save-btn').innerHTML = 'Kaydet';
+            document.getElementById('modal-cancel-btn').disabled = false;
+            document.getElementById('modal-delete-btn').disabled = false;
+            document.getElementById('modal-qr-oto-btn').disabled = false;
+
+            // Re-enable all form inputs except ID
+            const formInputs = document.querySelectorAll('#exhibit-modal input, #exhibit-modal textarea, #exhibit-modal select');
+            formInputs.forEach(input => input.disabled = false);
+            document.getElementById('modal-exhibit-id').disabled = true;  // ID always disabled
 
             document.getElementById('exhibit-modal').classList.remove('hidden');
             document.getElementById('exhibit-modal').classList.add('flex');
+        }
+
+        async function deleteFromModal() {
+            if (!currentEditExhibitId) return;
+
+            const exhibitIdToDelete = currentEditExhibitId;  // Save before modal closes
+            const titleToDelete = document.getElementById('modal-title-input').value;
+            const confirmed = await customConfirm(`"${titleToDelete}" eserini silmek istediğinize emin misiniz?`);
+            if (!confirmed) return;
+
+            closeExhibitModal();
+
+            // Direct delete without calling deleteRAGExhibit (which has its own confirm)
+            const res = await fetch(`${API_BASE}/rag-exhibits/${exhibitIdToDelete}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+
+            if (res.ok) {
+                await customAlert('Eser silindi! RAG güncellemesi gerekli.', 'success');
+                await loadExhibits();
+            } else {
+                await customAlert('Silme hatası!', 'error');
+            }
         }
 
         function closeExhibitModal() {
@@ -1376,7 +1602,7 @@
 
         async function saveExhibitModal() {
             const exhibitId = document.getElementById('modal-exhibit-id').value.trim();
-            const qrId = document.getElementById('modal-qr-id').value.trim();
+            const qr = document.getElementById('modal-qr-id').value.trim();
             const titleInput = document.getElementById('modal-title-input').value.trim();
             const category = document.getElementById('modal-category').value;
             const image = document.getElementById('modal-image').value.trim();
@@ -1385,88 +1611,132 @@
             // Combine title and content
             const fullContent = titleInput ? `${titleInput}\n\n${contentBody}` : contentBody;
 
-            if (!exhibitId) {
-                await customAlert('Dosya ID gerekli!', 'error');
+            if (!exhibitId && !isCreatingNew) {
+                await customAlert('ID gerekli!', 'error');
                 return;
             }
 
             // Check for duplicate QR before saving
-            if (qrId) {
+            if (qr) {
                 const isDuplicate = allExhibits.some(e =>
-                    e.qr_id === qrId &&
+                    e.qr === qr &&
                     e.exhibit_id !== currentEditExhibitId
                 );
 
                 if (isDuplicate) {
-                    const duplicateExhibit = allExhibits.find(e => e.qr_id === qrId && e.exhibit_id !== currentEditExhibitId);
-                    await customAlert(`Bu QR kodu "${duplicateExhibit?.title || qrId}" eserinde zaten kullanılıyor!\n\nLütfen farklı bir QR kodu seçin.`, 'error');
-                    // Don't close modal, let user fix the issue
+                    await customAlert(`"${qr}" QR kodu zaten kullanılıyor!\\nBaşka bir QR kodu girin.`, 'error');
                     document.getElementById('modal-qr-id').focus();
                     return;
                 }
             }
 
+            // Show loading and disable form
+            const saveBtn = document.getElementById('modal-save-btn');
+            const cancelBtn = document.getElementById('modal-cancel-btn');
+            const deleteBtn = document.getElementById('modal-delete-btn');
+            const formInputs = document.querySelectorAll('#exhibit-modal input, #exhibit-modal textarea, #exhibit-modal select');
+
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<span class="animate-spin">⏳</span> Kaydediliyor...';
+            saveBtn.disabled = true;
+            cancelBtn.disabled = true;
+            deleteBtn.disabled = true;
+            formInputs.forEach(input => input.disabled = true);
+
             let res;
-            if (isCreatingNew) {
-                res = await fetch(`${API_BASE}/rag-exhibits`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
-                    body: JSON.stringify({ exhibit_id: exhibitId, content: fullContent, qr_id: qrId })
-                });
-            } else {
-                res = await fetch(`${API_BASE}/rag-exhibits/${currentEditExhibitId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
-                    body: JSON.stringify({ content: fullContent, qr_id: qrId })
-                });
-            }
-
-            if (res.ok) {
-                // Upload pending image if exists
-                let finalImageUrl = document.getElementById('modal-image').value.trim();
-                if (pendingImageBase64 && qrId) {
-                    const uploadedUrl = await uploadPendingImage(qrId);
-                    if (uploadedUrl) {
-                        finalImageUrl = uploadedUrl;
-                    }
-                }
-
-                // Save metadata if qrId is set
-                if (qrId) {
-                    await fetch(`${API_BASE}/exhibit-metadata/${qrId}`, {
+            try {
+                if (isCreatingNew) {
+                    res = await fetch(`${API_BASE}/rag-exhibits`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({ content: fullContent, qr: qr, title: titleInput, category: category })
+                    });
+                } else {
+                    res = await fetch(`${API_BASE}/rag-exhibits/${currentEditExhibitId}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${authToken}`
                         },
-                        body: JSON.stringify({ title: titleInput, category: category, image: finalImageUrl })
+                        body: JSON.stringify({ content: fullContent, qr: qr, title: titleInput, category: category })
                     });
                 }
 
-                const data = await res.json();
-                await customAlert(data.message || 'Kaydedildi!', 'success');
-                closeExhibitModal();
-                // Clear metadata cache so changes reflect immediately
-                exhibitMetadataCache = null;
-                loadExhibits();
-                // Refresh card view if visible
-                if (document.getElementById('show-images-toggle').checked) {
-                    toggleImageView();
+                if (res.ok) {
+                    // Get exhibit_id from response (for new exhibit) or use current (for edit)
+                    const responseData = await res.clone().json();
+                    const exhibitIdToUse = responseData.exhibit_id || currentEditExhibitId;
+
+                    // Delete existing image if marked for deletion
+                    if (deleteExistingImage && exhibitIdToUse) {
+                        await deleteImageFromServer(exhibitIdToUse);
+                    }
+
+                    // Upload pending image if exists
+                    let finalImageUrl = document.getElementById('modal-image').value.trim();
+                    if (pendingImageBase64 && exhibitIdToUse) {
+                        const uploadedUrl = await uploadPendingImage(exhibitIdToUse);
+                        if (uploadedUrl) {
+                            finalImageUrl = uploadedUrl;
+                        }
+                    }
+
+                    // Note: Metadata (title, qr, category) is already saved by the API via /rag-exhibits endpoint
+                    // Only need to update image if one was uploaded
+                    if (finalImageUrl && pendingImageBase64) {
+                        // Get the exhibit_id for metadata update
+                        const responseData = await res.clone().json();
+                        const exhibitIdForMeta = responseData.exhibit_id || currentEditExhibitId;
+                        if (exhibitIdForMeta) {
+                            await fetch(`${API_BASE}/rag-exhibits/${exhibitIdForMeta}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${authToken}`
+                                },
+                                body: JSON.stringify({ content: fullContent, qr: qr, title: titleInput, category: category, image: finalImageUrl })
+                            });
+                        }
+                    }
+
+                    // Reset button
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.disabled = false;
+
+                    // Show success popup - user clicks OK to close
+                    await customAlert('✅ ESER YÜKLENDİ!\n\nRAG Güncellemesi gerekir.', 'success');
+
+                    closeExhibitModal();
+                    exhibitMetadataCache = null;
+                    await loadExhibits();
+                } else {
+                    const err = await res.json();
+                    await customAlert('Hata: ' + (err.detail || 'Bilinmeyen hata'), 'error');
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.disabled = false;
+                    cancelBtn.disabled = false;
+                    deleteBtn.disabled = false;
+                    formInputs.forEach(input => input.disabled = false);
+                    // Re-enable the ID field properly (always disabled)
+                    document.getElementById('modal-exhibit-id').disabled = true;
                 }
-            } else {
-                const err = await res.json();
-                await customAlert('Hata: ' + (err.detail || 'Bilinmeyen hata'), 'error');
+            } catch (e) {
+                await customAlert('Hata: ' + e.message, 'error');
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+                cancelBtn.disabled = false;
+                deleteBtn.disabled = false;
+                formInputs.forEach(input => input.disabled = false);
+                document.getElementById('modal-exhibit-id').disabled = true;
             }
         }
 
         async function deleteRAGExhibit(exhibitId) {
-            if (!confirm(`"${exhibitId}" silinsin mi?\n\nBu işlem geri alınamaz!`)) return;
+            const confirmed = await customConfirm(`"${exhibitId}" silinsin mi?\n\nBu işlem geri alınamaz!`);
+            if (!confirmed) return;
 
             const res = await fetch(`${API_BASE}/rag-exhibits/${exhibitId}`, {
                 method: 'DELETE',
@@ -1474,10 +1744,10 @@
             });
 
             if (res.ok) {
-                alert('Eser silindi! RAG ingestion gerekli.');
-                loadExhibits();
+                await customAlert('Eser silindi! RAG güncellemesi gerekli.', 'success');
+                await loadExhibits();
             } else {
-                alert('Hata oluştu!');
+                await customAlert('Silme hatası!', 'error');
             }
         }
 

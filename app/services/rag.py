@@ -48,11 +48,21 @@ def run_rag(
     is_exhibit_mode = False
     
     if qr_id is not None:
-        exhibit_id = resolve_qr(qr_id)
-        is_exhibit_mode = True
-        # exhibit_id'den okunabilir isim oluştur
-        if exhibit_id:
-            exhibit_name = exhibit_id.replace("_", " ").replace("-", " ").title()
+        from app.utils.ids import get_exhibit_by_qr
+        
+        result = get_exhibit_by_qr(qr_id)
+        if result:
+            id_str, metadata = result
+            # Convert ID_XX to ESER_DATA_XX for retriever
+            num = id_str.replace("ID_", "") if id_str.startswith("ID_") else id_str
+            exhibit_id = f"ESER_DATA_{num}"
+            is_exhibit_mode = True
+            
+            # exhibit_id'den okunabilir isim oluştur
+            exhibit_name = metadata.get("title", id_str)
+        else:
+            # Fallback (log warning ideally)
+            pass
 
     # Memory service ile soruyu zenginleştir
     enhanced_question, history_context, conv_context = enhance_question_with_context(
