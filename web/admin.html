@@ -135,7 +135,7 @@
                 </div>
                 <div class="bg-slate-800 rounded-xl p-6">
                     <h3 class="font-semibold mb-4">Toplam İstatistikler</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
                         <div>
                             <p class="text-slate-400 text-sm">Benzersiz IP</p>
                             <p id="stat-sessions" class="text-xl font-bold">-</p>
@@ -149,8 +149,12 @@
                             <p id="stat-keys" class="text-xl font-bold">-</p>
                         </div>
                         <div>
-                            <p class="text-slate-400 text-sm">Toplam Maliyet</p>
+                            <p class="text-slate-400 text-sm">LLM Maliyet</p>
                             <p id="stat-total-cost" class="text-xl font-bold">-</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-sm">TTS Maliyet</p>
+                            <p id="stat-tts-cost" class="text-xl font-bold text-purple-400">-</p>
                         </div>
                     </div>
                 </div>
@@ -160,6 +164,31 @@
                     <span class="font-medium text-slate-300">💰 Gemini 2.5 Flash:</span>
                     <span>Input: $0.15/1M token</span>
                     <span>Output: $0.60/1M token</span>
+                </div>
+
+                <!-- Azure TTS Section -->
+                <div
+                    class="bg-gradient-to-r from-purple-900/30 to-slate-800 rounded-xl p-6 mt-4 border border-purple-500/20">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold flex items-center gap-2">
+                            <span class="text-purple-400">🔊</span> Azure TTS Kullanımı
+                        </h3>
+                        <span class="text-xs text-slate-400 bg-slate-700 px-2 py-1 rounded">$16 / 1M karakter</span>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
+                        <div>
+                            <p class="text-slate-400 text-sm">Toplam Karakter</p>
+                            <p id="tts-total-chars" class="text-2xl font-bold text-purple-400">-</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-sm">İstek Sayısı</p>
+                            <p id="tts-total-requests" class="text-2xl font-bold text-purple-300">-</p>
+                        </div>
+                        <div>
+                            <p class="text-slate-400 text-sm">Tahmini Maliyet</p>
+                            <p id="tts-estimated-cost" class="text-2xl font-bold text-green-400">-</p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Unique IPs -->
@@ -676,6 +705,12 @@
             document.getElementById('stat-total-tokens').textContent = (data.total_tokens || 0).toLocaleString();
             document.getElementById('stat-keys').textContent = data.api_keys_count || 0;
             document.getElementById('stat-total-cost').textContent = `$${data.total_cost || 0}`;
+            document.getElementById('stat-tts-cost').textContent = `$${data.tts_total_cost || 0}`;
+
+            // Azure TTS Section
+            document.getElementById('tts-total-chars').textContent = (data.tts_total_chars || 0).toLocaleString();
+            document.getElementById('tts-total-requests').textContent = (data.tts_total_requests || 0).toLocaleString();
+            document.getElementById('tts-estimated-cost').textContent = `$${data.tts_total_cost || 0}`;
 
             // Load IPs from stats
             const stats = await fetchWithAuth(`${API_BASE}/stats`);

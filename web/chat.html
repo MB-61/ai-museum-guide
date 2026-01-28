@@ -6,7 +6,7 @@
     <meta
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content"
         name="viewport" />
-    <title>AI Müze Rehberi - KODE-X</title>
+    <title>AI Müze Rehberi - Museum-X</title>
     <link rel="icon" type="image/png" href="/static/favicon.png" />
 
     <!-- Fonts -->
@@ -136,7 +136,7 @@
                         style="font-size: 20px;">arrow_back_ios_new</span>
                 </a>
                 <div class="flex flex-col">
-                    <h2 class="text-white text-base font-bold leading-tight">KODE-X</h2>
+                    <h2 class="text-white text-base font-bold leading-tight">Museum-X</h2>
                     <span id="mode-indicator" class="text-[10px] text-primary font-medium uppercase">Asistan</span>
                 </div>
             </div>
@@ -603,6 +603,13 @@
             setStatus('Konuşuyor...');
             isSpeaking = true;
 
+            // Log TTS usage to backend (async, no await needed)
+            fetch('/api/v1/admin/tts-log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ characters: text.length })
+            }).catch(() => { });
+
             document.getElementById('stop-btn').style.display = 'flex';
             document.getElementById('stop-placeholder').style.display = 'none';
 
@@ -909,7 +916,9 @@
             document.getElementById('mic-pulse-1').classList.add('opacity-0');
             document.getElementById('mic-pulse-2').classList.add('opacity-0');
 
-            if (!isSpeaking) {
+            // Only reset to 'Hazır' if not speaking AND not currently thinking
+            const currentStatus = document.getElementById('status-text')?.textContent || '';
+            if (!isSpeaking && !currentStatus.includes('Düşünüyor')) {
                 setStatus('Hazır');
             }
         }

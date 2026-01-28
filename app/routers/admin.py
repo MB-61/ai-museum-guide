@@ -11,6 +11,7 @@ from fastapi import APIRouter, HTTPException, Depends, Header, UploadFile, File
 from pydantic import BaseModel
 
 from app.services import token_tracker, stats_service
+from app.services import tts_tracker
 from app.services.key_rotation import get_key_status, get_recent_errors, GEMINI_API_KEYS
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
@@ -126,6 +127,9 @@ async def get_dashboard(period: str = "today", authorized: bool = Depends(verify
     period_tokens = period_input + period_output
     period_cost = round((period_input * 0.00000015 + period_output * 0.0000006), 4)
     
+    # Get TTS stats
+    tts_stats = tts_tracker.get_tts_stats()
+    
     return {
         "today_scans": period_scans,
         "today_chats": period_chats,
@@ -135,7 +139,11 @@ async def get_dashboard(period: str = "today", authorized: bool = Depends(verify
         "today_tokens": period_tokens,
         "today_cost": period_cost,
         "total_cost": tokens["estimated_cost_usd"],
-        "api_keys_count": len(GEMINI_API_KEYS) if GEMINI_API_KEYS else 0
+        "api_keys_count": len(GEMINI_API_KEYS) if GEMINI_API_KEYS else 0,
+        # TTS Stats
+        "tts_total_chars": tts_stats["total"]["characters"],
+        "tts_total_requests": tts_stats["total"]["requests"],
+        "tts_total_cost": tts_stats["estimated_cost_usd"]
     }
 
 
@@ -195,11 +203,30 @@ async def get_tokens(authorized: bool = Depends(verify_token)):
     return token_tracker.get_token_stats()
 
 
+@router.get("/tts")
+async def get_tts(authorized: bool = Depends(verify_token)):
+    """Get TTS usage statistics."""
+    return tts_tracker.get_tts_stats()
+
+
+class TTSLogRequest(BaseModel):
+    characters: int
+
+
+@router.post("/tts-log")
+async def log_tts_usage(data: TTSLogRequest):
+    """Log TTS character usage (public endpoint for frontend)."""
+    if data.characters > 0:
+        tts_tracker.track_tts_usage(data.characters)
+    return {"status": "ok"}
+
+
 @router.post("/stats/reset")
 async def reset_all_stats(authorized: bool = Depends(verify_token)):
     """Reset all statistics."""
     stats_service.reset_stats()
     token_tracker.reset_stats()
+    tts_tracker.reset_tts_stats()
     return {"status": "ok"}
 
 

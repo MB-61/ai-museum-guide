@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
         name="viewport" />
-    <title>AI Müze Rehberi - KODE-X</title>
+    <title>AI Müze Rehberi - Museum-X</title>
     <meta name="description"
         content="Yapay zeka destekli müze rehberiniz. QR kod okutarak veya doğrudan sorarak eserler hakkında bilgi alın." />
     <link rel="icon" type="image/png" href="/static/favicon.png" />
@@ -65,7 +65,7 @@
                 <div
                     class="bg-black/30 backdrop-blur-md border border-white/10 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-lg shadow-black/20">
                     <span class="material-symbols-outlined text-primary text-[20px]">smart_toy</span>
-                    <span class="text-xs font-bold tracking-widest uppercase text-white/90">KODE-X</span>
+                    <span class="text-xs font-bold tracking-widest uppercase text-white/90">Museum-X</span>
                 </div>
             </div>
 
@@ -74,17 +74,24 @@
                 class="absolute top-12 right-6 z-20 flex items-center justify-center w-10 h-10 rounded-full bg-black/30 backdrop-blur-md border border-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-all shadow-lg active:scale-95">
                 <span class="material-symbols-outlined text-[20px]">settings</span>
             </a>
+
+            <!-- Language Toggle Button (Top Left) -->
+            <button id="lang-btn" onclick="toggleLanguage()"
+                class="absolute top-12 left-6 z-20 flex items-center justify-center w-10 h-10 rounded-full bg-black/30 backdrop-blur-md border border-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-all shadow-lg active:scale-95 font-bold text-xs">
+                TR
+            </button>
         </div>
 
         <!-- Content Area -->
         <div class="flex-1 flex flex-col justify-between pb-4 px-4 -mt-8 z-10 overflow-hidden">
             <!-- Title -->
             <div class="mb-3 text-center">
-                <h1
+                <h1 id="main-title"
                     class="text-3xl font-bold leading-tight tracking-tight mb-2 text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-400">
                     TED Kolej Müzesi
                 </h1>
-                <p class="text-slate-400 text-base font-body font-normal leading-relaxed max-w-[280px] mx-auto">
+                <p id="main-subtitle"
+                    class="text-slate-400 text-base font-body font-normal leading-relaxed max-w-[280px] mx-auto">
                     Kişisel yapay zeka rehberiniz ile tarihi yeniden keşfedin.
                 </p>
             </div>
@@ -98,14 +105,14 @@
                     </div>
                     <span
                         class="material-symbols-outlined mr-3 text-white group-hover:scale-110 transition-transform">qr_code_scanner</span>
-                    <span class="text-white text-lg font-bold tracking-wide">QR Kodu Tara</span>
+                    <span id="btn-qr" class="text-white text-lg font-bold tracking-wide">QR Kodu Tara</span>
                 </a>
 
                 <a href="chat.html?mode=general"
                     class="group flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-6 bg-surface-dark border border-white/5 hover:bg-white/5 active:scale-[0.98] transition-all duration-200 no-underline">
                     <span
                         class="material-symbols-outlined mr-3 text-slate-300 group-hover:text-white transition-colors">person</span>
-                    <span
+                    <span id="btn-continue"
                         class="text-slate-300 group-hover:text-white text-base font-semibold tracking-wide transition-colors">
                         QR Olmadan Devam Et
                     </span>
@@ -117,7 +124,7 @@
                 <div class="flex items-center gap-3">
                     <div id="network-qr" class="bg-white p-1.5 rounded-lg flex-shrink-0"></div>
                     <div class="text-left">
-                        <div class="text-[10px] text-slate-400 mb-1">📱 Mobil bağlantı:</div>
+                        <div id="mobile-label" class="text-[10px] text-slate-400 mb-1">📱 Mobil bağlantı:</div>
                         <div id="network-url" class="font-mono text-[10px] text-primary break-all">Yükleniyor...</div>
                     </div>
                 </div>
@@ -143,8 +150,47 @@
     <script type="module">
         import { generateNetworkQR } from './js/utils.js';
 
+        // Language state
+        let currentLang = localStorage.getItem('lang') || 'tr';
+
+        const translations = {
+            tr: {
+                title: 'TED Kolej Müzesi',
+                subtitle: 'Kişisel yapay zeka rehberiniz ile tarihi yeniden keşfedin.',
+                btnQr: 'QR Kodu Tara',
+                btnContinue: 'QR Olmadan Devam Et',
+                mobileLabel: '📱 Mobil bağlantı:',
+                version: 'Versiyon 3.0 • TED Kolej'
+            },
+            en: {
+                title: 'TED College Museum',
+                subtitle: 'Rediscover history with your personal AI guide.',
+                btnQr: 'Scan QR Code',
+                btnContinue: 'Continue Without QR',
+                mobileLabel: '📱 Mobile link:',
+                version: 'Version 3.0 • TED College'
+            }
+        };
+
+        function applyLanguage(lang) {
+            const t = translations[lang];
+            document.getElementById('main-title').textContent = t.title;
+            document.getElementById('main-subtitle').textContent = t.subtitle;
+            document.getElementById('btn-qr').textContent = t.btnQr;
+            document.getElementById('btn-continue').textContent = t.btnContinue;
+            document.getElementById('mobile-label').textContent = t.mobileLabel;
+            document.getElementById('lang-btn').textContent = lang.toUpperCase();
+            localStorage.setItem('lang', lang);
+        }
+
+        window.toggleLanguage = function () {
+            currentLang = currentLang === 'tr' ? 'en' : 'tr';
+            applyLanguage(currentLang);
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
             generateNetworkQR();
+            applyLanguage(currentLang);
         });
     </script>
 </body>
